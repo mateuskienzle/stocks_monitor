@@ -1,0 +1,44 @@
+/* #sidebar_completa{
+    height: 100vh;
+    margin: 0px;
+    padding: 20px;
+    /* background-image: url('back_sidebar4.png'); 
+} */
+
+/* .row{
+    --bs-gutter-x: 0rem !important;
+}
+
+.card{
+    margin-right: 10px;
+} */
+
+.btn-primary{
+    padding: 0px;
+}
+
+.header_icon{
+    width: 60px;
+}
+
+.fa-user:hover{
+    color: pink !important;
+    border-radius: 50px;
+    transition: 0.4s;
+    opacity: 0.7;
+}
+
+.fa-folder-open-o:hover{
+    color: pink !important;
+    border-radius: 50px;
+    transition: 0.4s;
+    opacity: 0.7;
+}
+
+
+/* #new-button{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border: 0px transparent solid;
+} */
