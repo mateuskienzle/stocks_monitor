@@ -59,10 +59,11 @@ layout = dbc.Row([
 @app.callback(
     Output('modal_add', 'is_open'),
     Input('add-button', 'n_clicks'),
+    Input('submit-cadastro', 'n_clicks'),
     State('modal_add', 'is_open')
 )
-def func_modal(n, open):
-    if n: return not open
+def func_modal(n1, n2, open):
+    if n1 or n2: return not open
     else: return open
 
 # 

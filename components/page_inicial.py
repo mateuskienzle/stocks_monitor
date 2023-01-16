@@ -17,7 +17,7 @@ layout = dbc.Container([
             dbc.Card([
                 dbc.CardBody([
                     dcc.Dropdown(id='dropdown_card1', multi=True, value='AAPL', options=[{"label": 'MAT', "value": 'MAT'}, {"label": 'AAPL', "value": 'AAPL'}]),
-                    dcc.Graph(id='line_graph',) # config={"displayModeBar": False, "showTips": False})
+                    dcc.Graph(id='line_graph', config={"displayModeBar": False, "showTips": False})
                 ])
             ], style=height_style)
         ], xs=12, md=8),
@@ -26,8 +26,8 @@ layout = dbc.Container([
             dbc.Card([
                 dbc.CardBody([
                     dbc.Checklist(id='checklist_card2', value=[1], inline=True,
-                        options=[{'label': 'moda', 'value': 1}, {'label': 'siderurgica', 'value': 2}]),
-                    dcc.Graph(id='radar_graph')
+                        options=[{'label': 'moda', 'value': 1}, {'label': 'siderurgica', 'value': 2}],persistence=True, persistence_type="session"),
+                    dcc.Graph(id='radar_graph', config={"displayModeBar": False, "showTips": False})
                 ])
             ], style=height_style)
         ], xs=12, md=4)
@@ -40,7 +40,7 @@ layout = dbc.Container([
                 dbc.Col([
                     dbc.Card([
                         dbc.CardBody([
-                            dcc.Graph(id='indicator_graph')
+                            dcc.Graph(id='indicator_graph',  config={"displayModeBar": False, "showTips": False})
                         ])
                     ], style={'height': '100%'})
                 ], xs=6, md=4),
@@ -49,7 +49,7 @@ layout = dbc.Container([
                         dbc.Col([
                             dbc.Card([
                                 dbc.CardBody([
-                                    dcc.Graph(id='line2_graph')
+                                    dcc.Graph(id='line2_graph', config={"displayModeBar": False, "showTips": False})
                                 ])
                             ], style=height_style)
                         ])
@@ -58,7 +58,7 @@ layout = dbc.Container([
                         dbc.Col([
                             dbc.Card([
                                 dbc.CardBody([
-                                    dcc.Graph(id='podium_graph')
+                                    dcc.Graph(id='podium_graph', config={"displayModeBar": False, "showTips": False})
                                 ])
                             ], style=height_style)
                         ])
