@@ -13,16 +13,16 @@
     margin-right: 10px;
 } */
 
-body{
+/* body{
     background-color : #120a19;
-}
+} */
 
 .btn-primary{
     padding: 0px;
 }
 
 .header-icon:hover{
-    color: #e28743 !important;
+    color: #b58900 !important;
     border-radius: 50px;
     transition: 0.4s;
     opacity: 0.7;

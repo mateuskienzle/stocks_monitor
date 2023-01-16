@@ -6,8 +6,7 @@ import pandas as pd
 import plotly.express as px
 
 from app import *
-from components import header, page_inicial, wallet
-
+from components import header, page_inicial, wallet, header2
 
 app.layout = dbc.Container(children=[
     dbc.Row([
@@ -15,14 +14,14 @@ app.layout = dbc.Container(children=[
             dbc.Row([
                 dbc.Col([
                     dcc.Location(id="url"),
-                    header.layout
+                    header2.layout
                 ]),
-            ],style={'background-color' : "#1c1a35"} ),
+            ]),
             dbc.Row([
                 dbc.Col([
                     dbc.Container(id="page-content", fluid=True)
                 ]),
-            ], style={'background-color' : "#120a19", 'height' : '100%'}),
+            ], style={'height' : '100%'}),
             
         ])
      ])

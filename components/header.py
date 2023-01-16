@@ -13,20 +13,19 @@ card_icon = {
     "margin-top" : "50%",
 }
 
-# card_icon = {}
 layout = dbc.Row([
         dbc.Col([
             modal_adicao.layout,
             dbc.Row([
                 dbc.Col([
-                    html.Div(className="fa fa-line-chart", style={'color': '#e28743'}),
+                    html.Div(className="fa fa-line-chart"), # style={'color': '#e28743'}),
                 ], xs=3, md=2, style={'fontSize': '400%'}),
                 dbc.Col([
                     dbc.Row([
-                        html.Legend("Stocks Monitor", style={"color" : "white", 'margin-bottom': 0}),
+                        html.Legend("Stocks Monitor", style={'margin-bottom': 0}),
                     ], className='g-3 my-auto'),
                     dbc.Row([
-                        html.Legend("ASIMOV", style={"color" : "white", 'margin-top': 0}),
+                        html.Legend("ASIMOV", style={'margin-top': 0}),
                     ], className='g-3 my-auto')
                 ], xs=9, md=10)
             ])
