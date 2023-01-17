@@ -2,12 +2,6 @@
     padding: 0px;
 }
 
-/* .header-icon:hover{
-    color: #b58900;
-    transition: 0.4s ease-out;
-    font-size: 64px;
-} */
-
 .header-icon{
     opacity:0.5;
     transition: 0.4s ease-out;
