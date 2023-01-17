@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 
 from app import *
-from components import header, page_inicial, wallet, header2
+from components import page_inicial, responsive_header, wallet
 
 app.layout = dbc.Container(children=[
     dbc.Row([
@@ -14,7 +14,7 @@ app.layout = dbc.Container(children=[
             dbc.Row([
                 dbc.Col([
                     dcc.Location(id="url"),
-                    header2.layout
+                    responsive_header.layout
                 ]),
             ]),
             dbc.Row([
