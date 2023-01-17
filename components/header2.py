@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, html
 from app import *
-from components import header, page_inicial, wallet, modal_adicao
+from components import modal_adicao
 
 ASIMOV_LOGO = "https://asimov.academy/wp-content/uploads/2021/12/logo_dark.png.webp"
 card_icon = {
@@ -46,7 +46,6 @@ layout = dbc.Navbar(
     dbc.Container([
         modal_adicao.layout,
         html.A(
-            # Use row and col to control vertical alignment of logo / brand
             dbc.Row([
                     dbc.Col(html.Img(src=ASIMOV_LOGO, height="30px")),
                     dbc.Col(dbc.NavbarBrand("Stocks Monitor", className="ms-2")),

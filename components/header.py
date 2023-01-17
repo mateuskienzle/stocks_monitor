@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 
 from app import *
-from components import header, page_inicial, wallet, modal_adicao
+from components import modal_adicao
 
 card_icon = {
     "fontSize": '300%',
@@ -18,7 +18,7 @@ layout = dbc.Row([
             modal_adicao.layout,
             dbc.Row([
                 dbc.Col([
-                    html.Div(className="fa fa-line-chart"), # style={'color': '#e28743'}),
+                    html.Div(className="fa fa-line-chart")
                 ], xs=3, md=2, style={'fontSize': '400%'}),
                 dbc.Col([
                     dbc.Row([
