@@ -30,17 +30,6 @@ icon_bar = dbc.Row([
     ], xs=4) 
 ], className="g-0 ms-auto flex-nowrap mt-3 mt-md-0", align="center",)
 
-search_bar = dbc.Row(
-    [
-        dbc.Col(dbc.Input(type="search", placeholder="Search")),
-        dbc.Col(
-            dbc.Button("Search", color="primary", className="ms-2"),
-            width="auto",
-        ),
-    ],
-    className="g-0 ms-auto flex-nowrap mt-3 mt-md-0",
-    align="center",
-)
 
 layout = dbc.Navbar(
     dbc.Container([
@@ -49,6 +38,7 @@ layout = dbc.Navbar(
             dbc.Row([
                     dbc.Col(html.Img(src=ASIMOV_LOGO, height="30px")),
                     dbc.Col(dbc.NavbarBrand("Stocks Monitor", className="ms-2")),
+                    
                 ], align="center", className="g-0"),
             href="https://asimov.academy", style={"textDecoration": "none"}),
         dbc.NavbarToggler(id="navbar_toggler"),

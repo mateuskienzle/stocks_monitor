@@ -8,6 +8,16 @@ import plotly.express as px
 from app import *
 from components import page_inicial, responsive_header, wallet
 
+toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
+                            id="positioned-toast",
+                            header="Confirmação de cadastro",
+                            is_open=False,
+                            dismissable=False,
+                            duration = "4000",
+                            icon="success",
+                            # top: 66 positions the toast below the navbar
+                            style={"position": "fixed", "top": 66, "right": 10, "width": 350})
+
 app.layout = dbc.Container(children=[
     dbc.Row([
         dbc.Col([
@@ -19,7 +29,8 @@ app.layout = dbc.Container(children=[
             ]),
             dbc.Row([
                 dbc.Col([
-                    dbc.Container(id="page-content", fluid=True)
+                    dbc.Container(id="page-content", fluid=True),
+                    toast
                 ]),
             ], style={'height' : '100%'}),
             
@@ -43,4 +54,4 @@ def render_page(pathname):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)       
+    app.run_server(debug=True, port=8051)       
