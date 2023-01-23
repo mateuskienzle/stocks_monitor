@@ -11,3 +11,12 @@
     opacity:1;
     transition: 0.4s ease-out;
 }
+
+@keyframes continuous-footer {
+    /* 0%  { transform: translateX(0%);} */
+    100%{ transform: translateX(100%);}
+  }
+
+p {
+    animation: continuous-footer 12s linear infinite;
+}

@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 
 from app import *
-from components import page_inicial, responsive_header, wallet
+from components import page_inicial, responsive_header, wallet, footer
 
 toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
                             id="positioned-toast",
@@ -33,6 +33,11 @@ app.layout = dbc.Container(children=[
                     toast
                 ]),
             ], style={'height' : '100%'}),
+            dbc.Row([
+                dbc.Col([
+                    html.P("CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%,")
+                ], style={"background-color" : 'black', 'color' : 'white', 'font-size' : '2em', 'overflow': 'hidden'} )
+            ]),
             
         ])
      ])

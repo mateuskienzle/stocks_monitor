@@ -28,7 +28,7 @@ icon_bar = dbc.Row([
             ], style={'border-color': 'transparent', 'background-color': 'transparent'}
         ),
     ], xs=4) 
-], className="g-0 ms-auto flex-nowrap mt-3 mt-md-0", align="center",)
+], className="g-0 ms-auto flex-nowrap mt-3 mt-md-0", align="center")
 
 
 layout = dbc.Navbar(

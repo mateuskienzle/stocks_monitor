@@ -74,5 +74,3 @@ layout=dbc.Modal([
 def func_modal(n1, n2, open):
     if n1 or n2: return [not open, open]
     else: return [open, open]
-
-        
