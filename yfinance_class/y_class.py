@@ -28,9 +28,9 @@ class Asimov_finance:
         ) -> pd.DataFrame:
         ibovespa = yf.Ticker("^BVSP")
         if not period: 
-            return ibovespa.history(start=self.start)
+            return ibovespa.history(start=self.start).pct_change()
         else: 
-            return ibovespa.history(period=period)
+            return ibovespa.history(period=period).pct_change()
 
     def get_symbol_object(self, ticker) -> yf.ticker.Ticker:
         symbol_object = yf.Ticker(ticker)
