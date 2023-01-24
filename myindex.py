@@ -35,8 +35,8 @@ app.layout = dbc.Container(children=[
             ], style={'height' : '100%'}),
             dbc.Row([
                 dbc.Col([
-                    html.P("CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%,")
-                ], style={"background-color" : 'black', 'color' : 'white', 'font-size' : '2em', 'overflow': 'hidden'} )
+                    html.P("CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%")
+                ], style={"background-color" : 'black', 'color' : 'white', 'font-size' : '1.5em', 'overflow': 'hidden', 'position' : 'fixed', 'left' : '0', 'bottom' : '0', 'height': '1.5em'} )
             ]),
             
         ])
