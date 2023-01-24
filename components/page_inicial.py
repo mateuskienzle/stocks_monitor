@@ -25,7 +25,7 @@ MAIN_CONFIG = {
 
 # Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
 fake_data = [['PETR4.SA', 23, 323, datetime(2017, 1, 1).date()], ['ITUB4.SA', 23, 323, datetime(2017, 1, 1).date()], ['TTEN3.SA', 23, 323, datetime(2017, 1, 1).date()]]
-df_carteira = pd.DataFrame(columns=['nome', 'preço', 'quantidade', 'data'])
+df_carteira = pd.DataFrame(data=fake_data, columns=['nome', 'preço', 'quantidade', 'data'])
 
 # =========  Layout  =========== #
 layout = dbc.Container([
@@ -50,7 +50,7 @@ layout = dbc.Container([
                     ]),
                     dbc.Row([
                         dbc.Col([
-                            dcc.Graph(id='line_graph', config={"displayModeBar": False, "showTips": False})    
+                            dcc.Graph(id='line_graph', config={"displayModeBar": False, "showTips": False}, style=HEIGHT)    
                         ])
                     ])
                     
@@ -135,7 +135,7 @@ def func_card1(dropdown, period):
     fig.add_trace(go.Scatter(x=data_ibovespa.index, y=data_ibovespa.values, name='BVSP', mode='lines', line_shape='spline'))
     fig.add_trace(go.Scatter(x=data_ticker.index, y=data_ticker.values, name=dropdown, mode='lines', line_shape='spline'))
 
-    fig.update_layout(MAIN_CONFIG, height=250, yaxis={'ticksuffix': '%'})
+    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
     fig.add_annotation(text=f'Variação em % - BVSP x {dropdown}',
         xref="paper", yref="paper",
         font=dict(
