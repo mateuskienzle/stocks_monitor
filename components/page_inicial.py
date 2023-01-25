@@ -1,5 +1,4 @@
-from dash import html, dcc
-from dash.dependencies import Input, Output, State
+from dash import html, dcc, Input, Output, State, no_update
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
@@ -8,6 +7,9 @@ from app import *
 from datetime import datetime, date
 
 import yfinance as yf
+from yfinance_class.y_class import Asimov_finance
+
+financer = Asimov_finance()
 
 HEIGHT={'height': '100%'}
 PERIOD_OPTIONS = ['5d','1mo','3mo','6mo','1y','2y','5y','10y','ytd']
@@ -24,8 +26,14 @@ MAIN_CONFIG = {
 }
 
 # Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-fake_data = [['PETR4.SA', 23, 323, datetime(2017, 1, 1).date()], ['ITUB4.SA', 23, 323, datetime(2017, 1, 1).date()], ['TTEN3.SA', 23, 323, datetime(2017, 1, 1).date()]]
-df_carteira = pd.DataFrame(data=fake_data, columns=['nome', 'preço', 'quantidade', 'data'])
+list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'c', 'ativo': 'ITUB4', 'vol': 10000},
+                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'MGLU3', 'vol': 7500 },
+                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'TTEN3', 'vol': 15000 },
+                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'VALE3', 'vol': 29000 },
+                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'LREN3', 'vol': 50000 }]
+
+df_trades = pd.DataFrame(list_trades)
+
 
 # =========  Layout  =========== #
 layout = dbc.Container([
@@ -37,12 +45,12 @@ layout = dbc.Container([
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col([
-                            dcc.Dropdown(id='dropdown_card1', className='dbc', value='PETR4.SA', options=[{"label": 'PETR4.SA', "value": 'PETR4.SA'}, {"label": 'ITUB4.SA', "value": 'ITUB4.SA'}, {"label": "TTEN3.SA", "value": "TTEN3.SA"}]),
+                            dcc.Dropdown(id='dropdown_card1', className='dbc', value=df_trades['ativo'].unique()[0], multi=True, options=[{'label': x, 'value': x} for x in df_trades['ativo'].unique()]),
                         ], sm=12, md=3),
                         dbc.Col([
                             dbc.RadioItems(
                                 options=[{'label': x, 'value': x} for x in PERIOD_OPTIONS],
-                                value='3mo',
+                                value='1y',
                                 id="period_input",
                                 inline=True
                             ),
@@ -120,30 +128,53 @@ layout = dbc.Container([
 @app.callback(
     Output('line_graph', 'figure'),
     Input('dropdown_card1', 'value'),
-    Input('period_input', 'value')
+    Input('period_input', 'value'),
+    # State('dcc_store_trades', 'data')
 )
 def func_card1(dropdown, period):
-    bov = yf.Ticker('^BVSP')
-    ticker = yf.Ticker(dropdown)
-    data_ibovespa = bov.history(period=period, interval='1d')['Close']
-    data_ticker = ticker.history(period=period, interval='1d')['Close']
+    if dropdown == None:
+        return no_update
+    if type(dropdown) != list: dropdown = [dropdown]
+    dropdown = ['^BVSP'] + dropdown
 
-    data_ibovespa = data_ibovespa.pct_change()*100
-    data_ticker = data_ticker.pct_change()*100
+    # dropdown = 'ITUB4.SA' # TEST PURPOUSES, DELETE.
+    # period = '1mo' # TEST PURPOUSES, DELETE.
+    
+    df_joined = pd.DataFrame()
+    for ticker in dropdown:
+        df = financer.get_symbol_object(ticker).history(period=period, interval='1d')[['Close']]
+        df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
+    
+    df_joined.dropna(inplace=True)
+    df_retorno = df_joined / df_joined.shift(1) - 1
+
+    # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
+    df_retorno = df_retorno.cumsum()
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data_ibovespa.index, y=data_ibovespa.values, name='BVSP', mode='lines', line_shape='spline'))
-    fig.add_trace(go.Scatter(x=data_ticker.index, y=data_ticker.values, name=dropdown, mode='lines', line_shape='spline'))
+    for ticker in dropdown:
+        fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker], mode='lines', name=ticker, line_shape='spline'))
 
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
-    fig.add_annotation(text=f'Variação em % - BVSP x {dropdown}',
-        xref="paper", yref="paper",
-        font=dict(
-            family="Courier New, monospace",
-            size=20,
-            color="#ffffff"),
-        align="center", bgcolor="rgba(0,0,0,0.5)", opacity=0.8,
-        x=0.9, y=0.1, showarrow=False)
+
+
+
+    # data_ibovespa = data_ibovespa.pct_change()*100
+    # data_ticker = data_ticker.pct_change()*100
+
+    # fig = go.Figure()
+    # fig.add_trace(go.Scatter(x=data_ibovespa.index, y=data_ibovespa.values, name='BVSP', mode='lines', line_shape='spline'))
+    # fig.add_trace(go.Scatter(x=data_ticker.index, y=data_ticker.values, name=dropdown, mode='lines', line_shape='spline'))
+
+    # fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    # fig.add_annotation(text=f'Variação em % - BVSP x {dropdown}',
+    #     xref="paper", yref="paper",
+    #     font=dict(
+    #         family="Courier New, monospace",
+    #         size=20,
+    #         color="#ffffff"),
+    #     align="center", bgcolor="rgba(0,0,0,0.5)", opacity=0.8,
+    #     x=0.9, y=0.1, showarrow=False)
     return fig
 
 # callback card 2

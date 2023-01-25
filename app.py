@@ -6,10 +6,10 @@ estilos = ["https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-a
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.4/dbc.min.css"
 # FONT_AWESOME = "https://use.fontawesome.com/releases/v5.10.2/css/all.css"
 
-load_figure_template("solar")
+load_figure_template("slate")
 
 
-app = dash.Dash(__name__, external_stylesheets=estilos + [dbc_css] + [dbc.themes.SOLAR])
+app = dash.Dash(__name__, external_stylesheets=estilos + [dbc_css] + [dbc.themes.SLATE])
 
 app.config['suppress_callback_exceptions'] = True
 app.scripts.config.serve_locally = True
