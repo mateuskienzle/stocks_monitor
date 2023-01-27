@@ -8,11 +8,12 @@ from datetime import datetime, date
 
 import yfinance as yf
 from yfinance_class.y_class import Asimov_finance
+from dash_bootstrap_templates import ThemeSwitchAIO
 
 financer = Asimov_finance()
 
 HEIGHT={'height': '100%'}
-PERIOD_OPTIONS = ['5d','1mo','3mo','6mo','1y','2y','5y','10y','ytd']
+PERIOD_OPTIONS = ['5d','1mo','3mo','6mo','1y','2y', 'ytd']
 MAIN_CONFIG = {
     "hovermode": "x unified",
     "legend": {"yanchor":"top", 
@@ -46,7 +47,7 @@ layout = dbc.Container([
                     dbc.Row([
                         dbc.Col([
                             dcc.Dropdown(id='dropdown_card1', className='dbc', value=df_trades['ativo'].unique()[0], multi=True, options=[{'label': x, 'value': x} for x in df_trades['ativo'].unique()]),
-                        ], sm=12, md=3),
+                        ], sm=12, md=2),
                         dbc.Col([
                             dbc.RadioItems(
                                 options=[{'label': x, 'value': x} for x in PERIOD_OPTIONS],
@@ -54,7 +55,14 @@ layout = dbc.Container([
                                 id="period_input",
                                 inline=True
                             ),
-                        ], sm=12, md=9)
+                        ], sm=12, md=8),
+                        dbc.Col([
+                            html.Span([
+                                    dbc.Label(className='fa fa-percent'),
+                                    dbc.Switch(id='profit_switch', value=True, className='d-inline-block ms-1'),
+                                    dbc.Label(className='fa fa-money')
+                            ]),
+                        ], sm=12, md=2)
                     ]),
                     dbc.Row([
                         dbc.Col([
@@ -136,9 +144,6 @@ def func_card1(dropdown, period):
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
     dropdown = ['^BVSP'] + dropdown
-
-    # dropdown = 'ITUB4.SA' # TEST PURPOUSES, DELETE.
-    # period = '1mo' # TEST PURPOUSES, DELETE.
     
     df_joined = pd.DataFrame()
     for ticker in dropdown:
@@ -157,24 +162,6 @@ def func_card1(dropdown, period):
 
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
 
-
-
-    # data_ibovespa = data_ibovespa.pct_change()*100
-    # data_ticker = data_ticker.pct_change()*100
-
-    # fig = go.Figure()
-    # fig.add_trace(go.Scatter(x=data_ibovespa.index, y=data_ibovespa.values, name='BVSP', mode='lines', line_shape='spline'))
-    # fig.add_trace(go.Scatter(x=data_ticker.index, y=data_ticker.values, name=dropdown, mode='lines', line_shape='spline'))
-
-    # fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
-    # fig.add_annotation(text=f'Variação em % - BVSP x {dropdown}',
-    #     xref="paper", yref="paper",
-    #     font=dict(
-    #         family="Courier New, monospace",
-    #         size=20,
-    #         color="#ffffff"),
-    #     align="center", bgcolor="rgba(0,0,0,0.5)", opacity=0.8,
-    #     x=0.9, y=0.1, showarrow=False)
     return fig
 
 # callback card 2

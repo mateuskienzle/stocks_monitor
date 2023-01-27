@@ -22,7 +22,7 @@ class Asimov_finance:
     #     html = r.get(url).content
     #     df_list = pd.read_html(html)
 
-    def get_ibovespa(
+    def get_ibovespa(   # delete function, it may not make sense
         self, 
         period:list=None,
         ) -> pd.DataFrame:
@@ -54,6 +54,11 @@ class Asimov_finance:
             return {key: symbol_object.info[key] for key in keys}
 
     def get_history_data(self, ticker) -> pd.DataFrame:
+        call_string = ''
+        if type(ticker) == list:
+            ticker = ['msft', 'aapl', 'goog']
+            for t in ticker:
+                call_string += f'{t} '  
         ticker = self.get_symbol_object(ticker)
 
         if ticker == None: return None

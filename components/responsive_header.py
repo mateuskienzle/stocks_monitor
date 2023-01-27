@@ -11,7 +11,7 @@ card_icon = {
 
 icon_bar = dbc.Row([
     dbc.Col([
-        dbc.Button(id='add-button',
+        dbc.Button(id='add_button',
             children=[html.Div(className="fa fa-plus-circle header-icon", style=card_icon)
             ], style={'border-color': 'transparent',  'background-color': 'transparent'}
         ),
