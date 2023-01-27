@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import time
+from datetime import datetime, date
 
 from app import *
 from components.page_inicial import financer
@@ -41,7 +42,7 @@ layout=dbc.Modal([
         ], style={'margin-top' : '1rem'}),
         dbc.Row([
             dbc.Col([
-                html.Img(src="https://petrobras.com.br/sitepetrobras/imgs/bg/logo-social.png", style={'width' : '30%', 'margin-top' : '1rem', 'border-radius' : '15%'})
+                html.Img(id='imagem_ativo', src="https://petrobras.com.br/sitepetrobras/imgs/bg/logo-social.png", style={'width' : '30%', 'margin-top' : '1rem', 'border-radius' : '15%'})
             ]),
             dbc.Col([
                 dbc.RadioItems(id='compra_venda_radio', options=[{"label": "Compra", "value": 'c'}, {"label": "Venda", "value": 'v'}], value='c'),
@@ -66,21 +67,29 @@ layout=dbc.Modal([
     Output('positioned-toast', 'header'),
     Output('positioned-toast', 'children'),
     Output('positioned-toast', 'icon'),
+    Output('imagem_ativo', 'src'),
+    Output('book_data_store', 'data'),
+
     Input('add_button', 'n_clicks'),
     Input('submit_cadastro', 'n_clicks'),
     Input('nome_ativo', 'value'),
+
     State('modal', 'is_open'),
     State('compra_venda_radio', 'value'),
     State('preco_ativo', 'value'),
     State('data_ativo', 'date'),
     State('quantidade_ativo', 'value'),
+    State('book_data_store', 'data')
 )
-def func_modal(n1, n2, ativo, open, radio, preco, data, quantidade):
+def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
     trigg_id = callback_context.triggered[0]['prop_id'].split('.')[0]
     if trigg_id == '': return no_update
+    # print('TIPO:', type(data)) #  <class 'str'>
+    # print('DATA:', data) # 2023-01-27
+    # print('TIPO:', type(preco)) #  <class 'float'>
+    # print('PREÇO:', preco) # 1.44353
     
-    print(trigg_id)
-
+    return_default = ['', '' , '']
     return_fail_inputs = ['Não foi possível registrar a sua ação!', 
                     'É necessário preencher todos os campos do Formulário.',
                     'primary']
@@ -89,25 +98,39 @@ def func_modal(n1, n2, ativo, open, radio, preco, data, quantidade):
     return_compra = ['Confirmação de Adição', 'Registro de COMPRA efetivado!', 'success']
     return_venda =  ['Confirmação de Remoção', 'Registro de VENDA efetivado!', 'warning']
     
+    # Casos de trigg
+    # 1. Botão de abrir modal
     if trigg_id == 'add_button':
-        return [not open, open, *return_fail_inputs]
-    else:
-        if trigg_id == 'nome_ativo' and ativo != None:
+        return [not open, open, *return_default, '', df_data]
+    
+    # 2. Digitação do nome do ativo
+    elif trigg_id == 'nome_ativo':
+        if ativo == None or len(ativo) < 5: return no_update
+        else:
             ticker = financer.get_symbol_object(ativo)
-            ticker.info['logo_url'] 
-        if None in [ativo, preco, quantidade, data] and open:
-            print('caiu aqui')
-            return [not open, open, *return_fail_inputs]
-
-        ticker = financer.get_symbol_object(ativo)
-        if not ticker:
-            print('ativo inexistente')
-            return no_update
+            try:
+                logo = ticker.info['logo_url']
+            except:
+                logo = ''
+            return [open, open, *return_default, logo, df_data]
     
-    retorno = return_compra if radio == 'c' else return_venda
+    # 3. Salvando ativo
+    elif trigg_id == 'submit_cadastro':
+        if None in [ativo, preco, vol] and open:
+            return [open, not open, *return_fail_inputs, '', df_data]
+        else:
+            ticker = financer.get_symbol_object(ativo)
+            if ticker:
+                df = pd.DataFrame(df_data)
+                periodo = datetime.strptime(periodo, '%Y-%m-%d')
+                df.loc[0] = [periodo, preco, radio, ativo, vol, logo, vol*preco]    
+                df.sort_values(by='date', ascending=False)
+                df.to_csv('registro_ativos.csv')
+                df_data = df.to_dict()
 
-    dicio = {'a': ativo, 'b': preco, 'c': data, 'd': quantidade}
-    print('DATA:', dicio, 'TIPO DATE:', type(dicio['c']))
-    
-    if n1 or n2: return [not open, open, *retorno]
-    else: return [open, open, *retorno]
+                retorno = return_compra if radio == 'c' else return_venda
+                return [not open, open, *retorno, '', df_data]
+            else:
+                return [not open, open, *return_fail_ticker, '', df_data]
+    # if n1 or n2: return [not open, open, *retorno, '', df_data]
+    # else: return [open, open, *retorno, '', df_data]

@@ -20,11 +20,11 @@ toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
                             style={"position": "fixed", "top": 66, "right": 10, "width": 350})
 
 # Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'c', 'ativo': 'ITUB4', 'vol': 10000},
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'MGLU3', 'vol': 7500 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'TTEN3', 'vol': 15000 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'VALE3', 'vol': 29000 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'LREN3', 'vol': 50000 }]
+list_trades = [{"date": datetime(2021, 7, 23), 'preco': 123, 'tipo': 'c', 'ativo': 'ITUB4', 'vol': 10000, 'logo_url': 'aaaa', 'valor_total': 'aaaa'},
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'c', 'ativo': 'MGLU3', 'vol': 7500, 'logo_url': 'aaaa', 'valor_total': 'aaaa' },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'c', 'ativo': 'TTEN3', 'vol': 15000, 'logo_url': 'aaaa', 'valor_total': 'aaaa' },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'c', 'ativo': 'VALE3', 'vol': 29000, 'logo_url': 'aaaa', 'valor_total': 'aaaa' },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'c', 'ativo': 'LREN3', 'vol': 50000, 'logo_url': 'aaaa', 'valor_total': 'aaaa'}]
 
 df_trades = pd.DataFrame(list_trades)
 
@@ -83,9 +83,6 @@ def update_yahoo_finance_base(n, historical_data, book_data):
         df = pd.DataFrame()
     return {}
         
-
-
-
 
 
 if __name__ == "__main__":
