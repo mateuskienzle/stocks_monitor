@@ -20,3 +20,12 @@
 p {
     animation: continuous-footer 12s linear infinite;
 }
+
+.card_compra{
+    border-left-width: 15px;
+    border-left-color: green;
+}
+.card_venda{
+    border-left-width: 15px;
+    border-left-color: red;
+}
