@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from collections import OrderedDict
 
+from app import * 
 
 
 lista_de_ativos = [{"Data" : "25/01/2023", "Nome" : "ITUB4", "Quantidade" : "10", "Valor unitário" : "R$9,47", "Valor total" : " R$94,70", "id" : 0}]
@@ -84,4 +85,14 @@ layout = dbc.Container([
   new_card,
   new_card
 
-], fluid=True)
+], id= 'layout_wallet', fluid=True)
+
+@app.callback(
+    Output ('layout_wallet' 'children'),
+    Input  ('book_data_store' , 'data'),
+    
+
+)
+
+def update_wallet(children):
+    pass

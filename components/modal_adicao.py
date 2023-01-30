@@ -112,7 +112,7 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
             if ticker:
                 df = pd.DataFrame(df_data)
                 logo = ticker.info['logo_url']
-                
+                preco = round(preco, 2)
                 df.loc[len(df)] = [periodo, preco, radio, ativo, vol, logo, vol*preco]    
                 df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
                 df.sort_values(by='date', ascending=False)
