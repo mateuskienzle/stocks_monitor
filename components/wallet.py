@@ -1,5 +1,5 @@
-from dash import html, dcc, dash_table
-from dash.dependencies import Input, Output, State
+from dash import html, dcc, dash_table, callback_context
+from dash.dependencies import Input, Output, State, ALL
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
@@ -54,7 +54,7 @@ def generate_card(info_do_ativo):
                             dbc.Col([
                                 dbc.Button([html.I(className = "fa fa-trash header-icon", 
                                                     style={'font-size' : '200%'})],
-                                                    id={'type': 'delete_event'},
+                                                    id={'type': 'delete_event', 'index': info_do_ativo['id']},
                                                     style={'background-color' : 'transparent', 'border-color' : 'transparent'}
                                                 ), 
                             ], md=1, xs=12, style={'text-align' : 'right'})
@@ -72,15 +72,23 @@ layout = dbc.Container(children=[], id= 'layout_wallet', fluid=True),
 @app.callback(
     Output ('layout_wallet', 'children'),
     Input  ('book_data_store', 'data'),
+    Input({'type': 'delete_event', 'index': ALL}, 'n_clicks'),
 )
 
-def update_wallet(data):
+def update_wallet(data, event):
     df = pd.DataFrame(data)
 
     lista_de_dicts = []
+    triggered_id = [p['prop_id'] for p in callback_context.triggered][0]
+
+    if type(triggered_id) == dict: 
+        if triggered_id['index'] == row:
+            df.drop([triggered_id['index']], axis=0, inplace=True)
+            
+    # print('\n\n',event)
+    print('\n\n',triggered_id)
     for row in df.index:
         infos = df.loc[row].to_dict()
-        
         #altera nome da classe do card se for compra ou venda
         if infos['tipo'] == 'Compra':
             infos['class_card'] = 'card_compra'
@@ -88,11 +96,12 @@ def update_wallet(data):
             infos['class_card'] = 'card_venda'
         infos['id'] = row
         lista_de_dicts.append(infos)
-        print(infos)
+        # print(infos)
+    
+    # pdb.set_trace()
 
     lista_de_cards = []
     for dicio in lista_de_dicts:
         card = generate_card(dicio)
         lista_de_cards.append(card)
-    
     return lista_de_cards
