@@ -140,6 +140,7 @@ layout = dbc.Container([
     # State('dcc_store_trades', 'data')
 )
 def func_card1(dropdown, period):
+    return {} # REMOVER - TESTE
     if dropdown == None:
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]

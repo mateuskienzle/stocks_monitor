@@ -88,7 +88,7 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
     # print('DATA:', data) # 2023-01-27
     # print('TIPO:', type(preco)) #  <class 'float'>
     # print('PREÇO:', preco) # 1.44353
-    
+    # logo = ''
     return_default = ['', '' , '']
     return_fail_inputs = ['Não foi possível registrar a sua ação!', 
                     'É necessário preencher todos os campos do Formulário.',
@@ -112,7 +112,7 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
                 logo = ticker.info['logo_url']
             except:
                 logo = ''
-            return [open, open, *return_default, logo, df_data]
+            return [open, not open, *return_default, logo, df_data]
     
     # 3. Salvando ativo
     elif trigg_id == 'submit_cadastro':

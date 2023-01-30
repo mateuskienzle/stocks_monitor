@@ -34,7 +34,7 @@ class Asimov_finance:
 
     def get_symbol_object(self, ticker) -> yf.ticker.Ticker:
         symbol_object = yf.Ticker(ticker)
-        hist = symbol_object.history()
+        hist = symbol_object.history(start=self.start)
         if hist.empty:
             if ".SA" in ticker: return None
             else:
@@ -50,7 +50,7 @@ class Asimov_finance:
 
         if symbol_object == None: return {}
         else:
-            keys = ['sector', 'logo_url', 'website', 'currentPrice', 'shortName', 'symbol', 'exchange']
+            keys = ['logo_url']
             return {key: symbol_object.info[key] for key in keys}
 
     def get_history_data(self, ticker) -> pd.DataFrame:
