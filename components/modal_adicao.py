@@ -45,7 +45,7 @@ layout=dbc.Modal([
                 html.Img(id='imagem_ativo', src="https://petrobras.com.br/sitepetrobras/imgs/bg/logo-social.png", style={'width' : '30%', 'margin-top' : '1rem', 'border-radius' : '15%'})
             ]),
             dbc.Col([
-                dbc.RadioItems(id='compra_venda_radio', options=[{"label": "Compra", "value": 'c'}, {"label": "Venda", "value": 'v'}], value='c'),
+                dbc.RadioItems(id='compra_venda_radio', options=[{"label": "Compra", "value": 'Compra'}, {"label": "Venda", "value": 'Venda'}], value='Compra'),
             ]),
         ])
     ]),
@@ -119,7 +119,7 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
                 df.to_csv('registro_ativos.csv')
                 df_data = df.to_dict()
 
-                retorno = return_compra if radio == 'c' else return_venda
+                retorno = return_compra if radio == 'Compra' else return_venda
                 return [not open, open, *retorno, '', df_data]
             else:   
                 return [not open, open, *return_fail_ticker, '', df_data]

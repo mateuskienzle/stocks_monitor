@@ -27,11 +27,11 @@ MAIN_CONFIG = {
 }
 
 # Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'c', 'ativo': 'ITUB4', 'vol': 10000},
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'MGLU3', 'vol': 7500 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'TTEN3', 'vol': 15000 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'VALE3', 'vol': 29000 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'c', 'ativo': 'LREN3', 'vol': 50000 }]
+list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'Compra', 'ativo': 'ITUB4', 'vol': 10000},
+                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500 },
+                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'TTEN3', 'vol': 15000 },
+                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000 },
+                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000 }]
 
 df_trades = pd.DataFrame(list_trades)
 
