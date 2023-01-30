@@ -10,8 +10,6 @@ from app import *
 from components.page_inicial import financer
 from datetime import date
 
-hoje = date.today()
-
 layout=dbc.Modal([
     dbc.ModalHeader(dbc.ModalTitle("Cadastro de ativos")),
     dbc.ModalBody([
@@ -31,9 +29,9 @@ layout=dbc.Modal([
                 id='data_ativo',
                 className='dbc',
                 min_date_allowed=date(2005, 1, 1),
-                max_date_allowed=date(hoje.year, hoje.month, hoje.day),
+                max_date_allowed=date.today(),
                 initial_visible_month=date(2017, 8, 5),
-                date=date(hoje.year, hoje.month, hoje.day)
+                date=date.today()
                 ),
             ], sm=12, md=6),
             dbc.Col([
@@ -46,6 +44,7 @@ layout=dbc.Modal([
             ]),
             dbc.Col([
                 dbc.RadioItems(id='compra_venda_radio', options=[{"label": "Compra", "value": 'c'}, {"label": "Venda", "value": 'v'}], value='c'),
+                html.Div(id='loading_state_div')
             ]),
         ])
     ]),
@@ -60,13 +59,51 @@ layout=dbc.Modal([
 
 
 # Callbacks =======================
-# Callback do modal ---------------
+# Callback para checar o loading state -----
+@app.callback(
+    Output('submit_cadastro', 'children'),
+
+    Input('submit_cadastro', 'n_clicks'),
+    Input('add_button', 'n_clicks'),
+    # Input('positioned_toast', 'icon'),
+)
+def add_spinner(n, n2):
+    trigg_id = callback_context.triggered[0]['prop_id'].split('.')[0]
+
+    if trigg_id == 'submit_cadastro':
+        return [dbc.Spinner(size="sm"), "  Carregando informações do ativo..."]
+    elif trigg_id == 'add_button':
+        return "Salvar"
+    else:
+        return no_update
+
+# Callback para limpar infos do modal -----
+@app.callback(
+    Output('nome_ativo', 'value'),
+    Output('preco_ativo', 'value'),
+    Output('data_ativo', 'date'),
+    Output('quantidade_ativo', 'value'),
+
+    Input('positioned_toast', 'header')
+)
+def reset_data_modal(icon):
+    trigg_id = callback_context.triggered[0]['prop_id'].split('.')[0]
+
+    if trigg_id != 'positioned_toast':
+        return no_update
+    else:
+        if "Confirmação" in icon:
+            return [None, None, date.today(), None]
+        else:
+            return no_update
+    
+# Callback do modal ------------------------
 @app.callback(
     Output('modal', 'is_open'),
-    Output("positioned-toast", "is_open"),
-    Output('positioned-toast', 'header'),
-    Output('positioned-toast', 'children'),
-    Output('positioned-toast', 'icon'),
+    Output("positioned_toast", "is_open"),
+    Output('positioned_toast', 'header'),
+    Output('positioned_toast', 'children'),
+    Output('positioned_toast', 'icon'),
     Output('imagem_ativo', 'src'),
     Output('book_data_store', 'data'),
 
@@ -104,7 +141,7 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
         return [not open, open, *return_default, '', df_data]
     
     # 2. Salvando ativo
-    elif trigg_id == 'submit_cadastro':
+    elif trigg_id == 'submit_cadastro':  # Corrigir caso de erro - None
         if None in [ativo, preco, vol] and open:
             return [open, not open, *return_fail_inputs, '', df_data]
         else:

@@ -1,16 +1,17 @@
-from dash import html, dcc
+from dash import html, dcc, no_update
 import dash
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, date
+# import dash_loading_spinners
 
 from app import *
 from components import page_inicial, responsive_header, wallet, footer
 
 toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
-                            id="positioned-toast",
+                            id="positioned_toast",
                             header="Confirmação de cadastro",
                             is_open=False,
                             dismissable=False,
@@ -57,6 +58,25 @@ app.layout = dbc.Container(children=[
 
 ], fluid=True)
 
+# app.layout = html.Div(
+#      children=[
+#              html.Div(
+#                  id="div-loading",
+#                  children=[
+#                      dash_loading_spinners.Pacman(
+#                          fullscreen=True, 
+#                          id="loading-whole-app"
+#                      )
+#                  ]
+#              ),
+#              html.Div(
+#                  className="div-app",
+#                  id="div-app",
+#                  children = [layout_quick]
+#              )
+#          ]
+#      )
+
 # =========  Callbacks  =========== #
 # Callback pages -------------------
 @app.callback(
@@ -82,7 +102,19 @@ def update_yahoo_finance_base(n, historical_data, book_data):
     if historical_data == {}:
         df = pd.DataFrame()
     return {}
-        
+
+# # Callback loading-state
+# @app.callback(
+#         Output("div-loading", "children"),
+#         Input("div-app", "loading_state"),
+#         State("div-loading", "children"),
+# )
+# def hide_loading_after_startup(loading_state, children):
+#     if children:
+#         print("remove loading spinner!")
+#         return None
+#     print("spinner already gone!")
+#     raise no_update
 
 
 if __name__ == "__main__":
