@@ -72,8 +72,8 @@ layout=dbc.Modal([
 
     Input('add_button', 'n_clicks'),
     Input('submit_cadastro', 'n_clicks'),
-    Input('nome_ativo', 'value'),
 
+    State('nome_ativo', 'value'),
     State('modal', 'is_open'),
     State('compra_venda_radio', 'value'),
     State('preco_ativo', 'value'),
@@ -103,18 +103,7 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
     if trigg_id == 'add_button':
         return [not open, open, *return_default, '', df_data]
     
-    # 2. Digitação do nome do ativo
-    elif trigg_id == 'nome_ativo':
-        if ativo == None or len(ativo) < 5: return no_update
-        else:
-            ticker = financer.get_symbol_object(ativo)
-            try:
-                logo = ticker.info['logo_url']
-            except:
-                logo = ''
-            return [open, not open, *return_default, logo, df_data]
-    
-    # 3. Salvando ativo
+    # 2. Salvando ativo
     elif trigg_id == 'submit_cadastro':
         if None in [ativo, preco, vol] and open:
             return [open, not open, *return_fail_inputs, '', df_data]
@@ -122,15 +111,17 @@ def func_modal(n1, n2, ativo, open, radio, preco, periodo, vol, df_data):
             ticker = financer.get_symbol_object(ativo)
             if ticker:
                 df = pd.DataFrame(df_data)
-                periodo = datetime.strptime(periodo, '%Y-%m-%d')
-                df.loc[0] = [periodo, preco, radio, ativo, vol, logo, vol*preco]    
+                logo = ticker.info['logo_url']
+                
+                df.loc[len(df)] = [periodo, preco, radio, ativo, vol, logo, vol*preco]    
+                df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
                 df.sort_values(by='date', ascending=False)
                 df.to_csv('registro_ativos.csv')
                 df_data = df.to_dict()
 
                 retorno = return_compra if radio == 'c' else return_venda
                 return [not open, open, *retorno, '', df_data]
-            else:
+            else:   
                 return [not open, open, *return_fail_ticker, '', df_data]
     # if n1 or n2: return [not open, open, *retorno, '', df_data]
     # else: return [open, open, *retorno, '', df_data]
