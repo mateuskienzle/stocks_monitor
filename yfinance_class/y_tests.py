@@ -9,7 +9,7 @@ import yfinance as yf
 
 msft = yf.Ticker("PETR4.SA")
 a = msft.info
-hist = msft.history(period="max")
+hist = msft.history(period="1y")
 msft.history_metadata
 
 # da pra pegar varios tickers de uma vez
