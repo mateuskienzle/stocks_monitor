@@ -10,9 +10,6 @@ import pdb
 
 from app import * 
 
-
-# lista_de_ativos = [{"Data" : "25/01/2023", "Nome" : "ITUB4", "Quantidade" : "10", "Valor unitário" : "R$9,47", "Valor total" : " R$94,70", "id" : 0}]
-
 def generate_card(info_do_ativo):
     new_card =  dbc.Row([
             dbc.Col([
@@ -67,7 +64,7 @@ def generate_card(info_do_ativo):
     return new_card
 
 
-layout = dbc.Container(children=[], id= 'layout_wallet', fluid=True),
+layout = dbc.Container(children=[], id='layout_wallet', fluid=True),
 
 @app.callback(
     Output ('layout_wallet', 'children'),

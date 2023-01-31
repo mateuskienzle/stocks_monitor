@@ -5,10 +5,20 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, date
-# import dash_loading_spinners
 
 from app import *
 from components import page_inicial, responsive_header, wallet, footer
+
+
+# Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
+list_trades = [{"date": datetime(2021, 7, 23), 'preco': 123, 'tipo': 'Venda', 'ativo': 'ITUB4', 'vol': 10000, 'logo_url': 'https://logo.clearbit.com/itau.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br'},
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500, 'logo_url': 'https://logo.clearbit.com/magazineluiza.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Venda', 'ativo': 'TTEN3', 'vol': 15000, 'logo_url': 'https://logo.clearbit.com/ri.3tentos.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000, 'logo_url': 'https://logo.clearbit.com/vale.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000, 'logo_url': 'https://logo.clearbit.com/lojasrenner.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br'}]
+
+df_trades = pd.DataFrame(list_trades)
+
 
 toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
                             id="positioned_toast",
@@ -20,14 +30,6 @@ toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
                             # top: 66 positions the toast below the navbar
                             style={"position": "fixed", "top": 66, "right": 10, "width": 350})
 
-# Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-list_trades = [{"date": datetime(2021, 7, 23), 'preco': 123, 'tipo': 'Venda', 'ativo': 'ITUB4', 'vol': 10000, 'logo_url': 'https://logo.clearbit.com/petrobras.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br'},
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500, 'logo_url': 'https://logo.clearbit.com/petrobras.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Venda', 'ativo': 'TTEN3', 'vol': 15000, 'logo_url': 'https://logo.clearbit.com/petrobras.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000, 'logo_url': 'https://logo.clearbit.com/petrobras.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000, 'logo_url': 'https://logo.clearbit.com/petrobras.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br'}]
-
-df_trades = pd.DataFrame(list_trades)
 
 app.layout = dbc.Container(children=[
     dcc.Store(id='book_data_store', data=df_trades.to_dict()),
@@ -103,19 +105,7 @@ def update_yahoo_finance_base(n, historical_data, book_data):
         df = pd.DataFrame()
     return {}
 
-# # Callback loading-state
-# @app.callback(
-#         Output("div-loading", "children"),
-#         Input("div-app", "loading_state"),
-#         State("div-loading", "children"),
-# )
-# def hide_loading_after_startup(loading_state, children):
-#     if children:
-#         print("remove loading spinner!")
-#         return None
-#     print("spinner already gone!")
-#     raise no_update
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port=8051)       
+    app.run_server(debug=True, port=8051)  
