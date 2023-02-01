@@ -190,30 +190,30 @@ layout = dbc.Container([
     # State('dcc_store_trades', 'data')
 )
 def func_card1(dropdown, period):
-    return {} # REMOVER - TESTE
-    # if dropdown == None:
-    #     return no_update
-    # if type(dropdown) != list: dropdown = [dropdown]
-    # dropdown = ['^BVSP'] + dropdown
+    # return {} # REMOVER - TESTE
+    if dropdown == None:
+        return no_update
+    if type(dropdown) != list: dropdown = [dropdown]
+    dropdown = ['^BVSP'] + dropdown
     
-    # df_joined = pd.DataFrame()
-    # for ticker in dropdown:
-    #     df = financer.get_symbol_object(ticker).history(period=period, interval='1d')[['Close']]
-    #     df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
+    df_joined = pd.DataFrame()
+    for ticker in dropdown:
+        df = financer.get_symbol_object(ticker).history(period=period, interval='1d')[['Close']]
+        df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
     
-    # df_joined.dropna(inplace=True)
-    # df_retorno = df_joined / df_joined.shift(1) - 1
+    df_joined.dropna(inplace=True)
+    df_retorno = df_joined / df_joined.shift(1) - 1
 
-    # # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
-    # df_retorno = df_retorno.cumsum()
+    # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
+    df_retorno = df_retorno.cumsum()
 
-    # fig = go.Figure()
-    # for ticker in dropdown:
-    #     fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker], mode='lines', name=ticker, line_shape='spline'))
+    fig = go.Figure()
+    for ticker in dropdown:
+        fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker], mode='lines', name=ticker, line_shape='spline'))
 
-    # fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
 
-    # return fig
+    return fig
 
 # callback card 2
 @app.callback(
