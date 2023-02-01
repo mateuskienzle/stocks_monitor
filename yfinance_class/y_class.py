@@ -65,7 +65,9 @@ class Asimov_finance:
         else:
             return ticker.history(start=self.start)
 
-
+    def get_news(ticker) -> pd.DataFrame:
+        news = yf.Ticker(ticker).news
+        return news  
 
 
 

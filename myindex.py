@@ -1,14 +1,17 @@
-from dash import html, dcc, no_update
+from dash import html, dcc, no_update, callback_context
 import dash
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output, State, ALL
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, date
 import yfinance as yf
 
+
 from app import *
+from components.page_inicial import financer
 from components import page_inicial, responsive_header, wallet, footer
+
 
 # PRIMEIRA INICIALIZAÇÃO =========================
 '''
@@ -55,15 +58,15 @@ recente de cada ativo. Na sequência fazer as requisições necessárias pro yfi
 # df_book = df_book.to_dict()
 # df_historical_data = df_historical_data.to_dict()
 
-    
+
 
 
 # Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-list_trades = [{"date": datetime(2021, 7, 23), 'preco': 123, 'tipo': 'Venda', 'ativo': 'ITUB4', 'vol': 10000, 'logo_url': 'https://logo.clearbit.com/itau.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br'},
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500, 'logo_url': 'https://logo.clearbit.com/magazineluiza.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Venda', 'ativo': 'TTEN3', 'vol': 15000, 'logo_url': 'https://logo.clearbit.com/ri.3tentos.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000, 'logo_url': 'https://logo.clearbit.com/vale.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br' },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000, 'logo_url': 'https://logo.clearbit.com/lojasrenner.com.br', 'valor_total': 'https://logo.clearbit.com/petrobras.com.br'}]
+list_trades = [{"date": datetime(2021, 7, 23), 'preco': 123, 'tipo': 'Venda', 'ativo': 'ITUB4', 'vol': 10000, 'logo_url': 'https://logo.clearbit.com/itau.com.br', 'valor_total': 500},
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500, 'logo_url': 'https://logo.clearbit.com/magazineluiza.com.br', 'valor_total': 500 },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Venda', 'ativo': 'TTEN3', 'vol': 15000, 'logo_url': 'https://logo.clearbit.com/ri.3tentos.com.br', 'valor_total': 500 },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000, 'logo_url': 'https://logo.clearbit.com/vale.com.br', 'valor_total': 500 },
+                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000, 'logo_url': 'https://logo.clearbit.com/lojasrenner.com.br', 'valor_total': 500}]
 df_trades = pd.DataFrame(list_trades)
 
 
@@ -77,9 +80,63 @@ toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
                             style={"position": "fixed", "top": 66, "right": 10, "width": 350})
 
 
+def generate_card(info_do_ativo):
+    new_card =  dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardBody([
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Legend([html.I(className='fa fa-list-alt', style={"fontSize": '85%'})," Nome: " + str(info_do_ativo['ativo'])])
+                                    ]),
+                                ]),
+                                dbc.Row([
+
+                                    dbc.Col([
+                                        html.Legend([html.I(className='fa fa-database', style={"fontSize": '85%'})," Quantidade: " + str(info_do_ativo['vol'])])
+                                    ]),
+                                ]),
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Legend([html.I(className='fa fa-usd', style={"fontSize": '100%'}), " Valor unitário: R$" + '{:,.2f}'.format(info_do_ativo['preco'])])
+                                    ]),
+                                ]),
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Legend([html.I(className='fa  fa-calendar', style={"fontSize": '85%'}), " Data: " + info_do_ativo['date'][:10]])
+                                    ]),
+                                ]),
+                            ], md=6, xs=6),
+                            dbc.Col([
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Img(src=info_do_ativo['logo_url'], style={'width' : '10%', 'margin-top' : '1rem', 'border-radius' : '15%'}),
+                                        html.Legend([html.I(className='fa fa-handshake-o', style={"fontSize": '100%'}), " Tipo: " + str(info_do_ativo['tipo'])]),
+                                        html.Legend([html.I(className='fa fa-usd', style={"fontSize": '100%'}), " Total: R$" + '{:,.2f}'.format(info_do_ativo['preco']*info_do_ativo['vol'])])
+                                    ]),
+                                ]),
+                            ], md=5, xs=6, style={'text-align' : 'right'}),
+                            dbc.Col([
+                                dbc.Button([html.I(className = "fa fa-trash header-icon", 
+                                                    style={'font-size' : '200%'})],
+                                                    id={'type': 'delete_event', 'index': info_do_ativo['id']},
+                                                    style={'background-color' : 'transparent', 'border-color' : 'transparent'}
+                                                ), 
+                            ], md=1, xs=12, style={'text-align' : 'right'})
+                        ])
+                    ])
+                ], class_name=info_do_ativo['class_card'])
+            ])
+        ], className='g-2 my-auto')
+
+    return new_card
+
 app.layout = dbc.Container(children=[
-    dcc.Store(id='book_data_store', data=df_trades.to_dict()),
-    dcc.Store(id='historical_data_store', data={}),
+    dcc.Store(id='book_data_store', data=df_trades.to_dict(), storage_type='session'),
+    dcc.Store(id='historical_data_store', data={}, storage_type='session'),
+    dcc.Store(id='layout_data', data=[], storage_type='session'),
     # dcc.Interval(id='interval_update', interval=1000*60),
     dbc.Row([
         dbc.Col([
@@ -143,6 +200,108 @@ def book_to_csv(book_data):
     return []
 
 
+# @app.callback(
+#     Output('modal', 'is_open'),
+#     Output("positioned_toast", "is_open"),
+#     Output('positioned_toast', 'header'),
+#     Output('positioned_toast', 'children'),
+#     Output('positioned_toast', 'icon'),
+#     Output('imagem_ativo', 'src'),
+#     Output('book_data_store', 'data'),
+
+#     Output('layout_wallet', 'children'),
+
+#     Input('add_button', 'n_clicks'),
+#     Input('submit_cadastro', 'n_clicks'),
+
+#     Input('book_data_store', 'data'),
+#     Input({'type': 'delete_event', 'index': ALL}, 'n_clicks'),
+
+#     State('nome_ativo', 'value'),
+#     State('modal', 'is_open'),
+#     State('compra_venda_radio', 'value'),
+#     State('preco_ativo', 'value'),
+#     State('data_ativo', 'date'),
+#     State('quantidade_ativo', 'value'),
+#     State('book_data_store', 'data'), 
+# )
+# def func_modal(n1, n2, data, event, ativo, open, radio, preco, periodo, vol, df_data):
+#     trigg_id = callback_context.triggered[0]['prop_id'].split('.')[0]
+
+#     if trigg_id == '': return no_update
+#     # print('TIPO:', type(data)) #  <class 'str'>
+#     # print('DATA:', data) # 2023-01-27
+#     # print('TIPO:', type(preco)) #  <class 'float'>
+#     # print('PREÇO:', preco) # 1.44353
+#     # logo = ''
+#     return_default = ['', '' , '']
+#     return_fail_inputs = ['Não foi possível registrar a sua ação!', 
+#                     'É necessário preencher todos os campos do Formulário.',
+#                     'primary']
+#     return_fail_ticker = return_fail_inputs.copy()
+#     return_fail_ticker[1] = 'É necessário inserir um Ticker válido.'
+#     return_compra = ['Confirmação de Adição', 'Registro de COMPRA efetivado!', 'success']
+#     return_venda =  ['Confirmação de Remoção', 'Registro de VENDA efetivado!', 'warning']
+    
+#     # Casos de trigg
+#     # 1. Botão de abrir modal
+#     if trigg_id == 'add_button':
+#         return [not open, open, *return_default, '', df_data, lista_de_cards]
+    
+#     # 2. Salvando ativo
+#     elif trigg_id == 'submit_cadastro':  # Corrigir caso de erro - None
+#         if None in [ativo, preco, vol] and open:
+#             return [open, not open, *return_fail_inputs, '', df_data, lista_de_cards]
+#         else:
+#             ticker = financer.get_symbol_object(ativo)
+#             if ticker:
+#                 df = pd.DataFrame(df_data)
+#                 logo = ticker.info['logo_url']
+#                 preco = round(preco, 2)
+#                 df.loc[len(df)] = [periodo, preco, radio, ativo, vol, logo, vol*preco]    
+#                 df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+#                 df.sort_values(by='date', ascending=False)
+#                 df.to_csv('registro_ativos.csv')
+#                 df_data = df.to_dict()
+
+#                 retorno = return_compra if radio == 'Compra' else return_venda
+#                 return [not open, open, *retorno, '', df_data, lista_de_cards]
+#             else:   
+#                 return [not open, open, *return_fail_ticker, '', df_data, lista_de_cards]
+#     # if n1 or n2: return [not open, open, *retorno, '', df_data]
+
+#     # else: return [open, open, *retorno, '', df_data]
+#     elif type(trigg_id) == dict: 
+#         if trigg_id == 'delete_event':
+#             if trigg_id['index'] == row:
+#                 df.drop([trigg_id['index']], axis=0, inplace=True)
+#                 return [not open, open, *retorno, '', df_data, lista_de_cards]
+
+#     df = pd.DataFrame(data)
+
+#     lista_de_dicts = []
+
+#     # print('\n\n',event)
+#     print('\n\n',trigg_id)
+#     for row in df.index:
+#         infos = df.loc[row].to_dict()
+#         #altera nome da classe do card se for compra ou venda
+#         if infos['tipo'] == 'Compra':
+#             infos['class_card'] = 'card_compra'
+#         else:
+#             infos['class_card'] = 'card_venda'
+#         infos['id'] = row
+#         lista_de_dicts.append(infos)
+#         # print(infos)
+    
+#     # pdb.set_trace()
+
+#     lista_de_cards = []
+#     for dicio in lista_de_dicts:
+#         card = generate_card(dicio)
+#         lista_de_cards.append(card)
+
+#     return [not open, open, *retorno, '', df_data, lista_de_cards]
 
 if __name__ == "__main__":
     app.run_server(debug=True, port=8051)  

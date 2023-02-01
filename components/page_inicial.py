@@ -36,6 +36,39 @@ list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'Compra', 'ativo': 'ITUB4
 df_trades = pd.DataFrame(list_trades)
 
 
+new_card =  dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardBody([
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Legend(" Manchete ")
+                                    ]),
+                                ]),
+                                dbc.Row([
+
+                                    dbc.Col([
+                                        html.Legend(" Texto notícia ")
+                                    ]),
+                                ]),
+                                dbc.Row([
+                                    dbc.Col([
+                                        html.Legend(" Data notícia ")
+                                    ]),
+                                ]),
+                            ], md=10, xs=6),
+                            dbc.Col([
+                                html.Legend("Tag empresa")
+                            ], md=2, xs=12, style={'text-align' : 'right'})
+                        ])
+                    ])
+                ],style={'background-color' : '#000000'})
+            ],)
+        ], className='g-2 my-auto')
+
+
 # =========  Layout  =========== #
 layout = dbc.Container([
     # Linha 1
@@ -122,9 +155,26 @@ layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card,
+                    new_card
                 ])
-            ], style={'height': '100%'})
+            ], id='asimov_news', style={"maxHeight": '61em', "overflow-y": "auto"})
         ], xs=12, md=6)
     ], className='g-2 my-auto')
 ], fluid=True)
@@ -198,3 +248,12 @@ def func_card2(checklist):
 
 
     return {}
+
+# callback card asimov news
+# @app.callback(
+#     Output('asimov_news', 'children'),
+#     Input('checklist_card2', 'data')
+# )
+# def func_card2(checklist):
+#     print(checklist)
+#     return {}
