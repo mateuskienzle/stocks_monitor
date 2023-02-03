@@ -191,6 +191,7 @@ layout = dbc.Container([
 )
 def func_card1(dropdown, period):
     # return {} # REMOVER - TESTE
+    
     if dropdown == None:
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
@@ -202,14 +203,14 @@ def func_card1(dropdown, period):
         df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
     
     df_joined.dropna(inplace=True)
-    df_retorno = df_joined / df_joined.shift(1) - 1
+    df_retorno = df_joined / df_joined.iloc[0] - 1
 
     # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
-    df_retorno = df_retorno.cumsum()
+    # df_retorno = df_retorno.cumsum()
 
     fig = go.Figure()
     for ticker in dropdown:
-        fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker], mode='lines', name=ticker, line_shape='spline'))
+        fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker]*100, mode='lines', name=ticker, line_shape='spline'))
 
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
 

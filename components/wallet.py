@@ -161,7 +161,6 @@ def func_modal(n1, n2, data, event, ativo, open, radio, preco, periodo, vol):
                 df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
                 df.reset_index(drop=True, inplace=True)
                 df = df.sort_values(by='date', ascending=True)
-                pdb.set_trace()
                 df.to_csv('registro_ativos.csv')
                 
                 data = df.to_dict()
