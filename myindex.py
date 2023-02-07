@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, date
 import yfinance as yf
-
+from tvDatafeed import TvDatafeed, Interval
 
 from app import *
 from components.page_inicial import financer
@@ -28,6 +28,36 @@ recente de cada ativo. Na sequência fazer as requisições necessárias pro yfi
     - Ler o book_data.csv e historical_data.csv na inicialização!
     - Cirar um dcc.Interval() para atualizar o historical_data.csv se necessário!
 '''
+
+# Checando se o book de transações existe
+# ativos_na_carteira = []
+# try:
+#     df_book = pd.read_csv('book_data.csv', index_col=0)
+#     ativos_na_carteira = list(df_book['ativo'].unique())
+#     ativos_na_carteira = [[ativo, exchange] for ativo, exchange in df_book['ativo'].unique(), df_book['exchange'].unique()]
+# except:
+#     df_book = pd.DataFrame(columns=['date', 'preco', 'tipo', 'ativo', 'exchange', 'vol', 'logo_url', 'valor_total'])
+
+# for x, y in zip(df_book['ativo'].unique(), df_book['exchange'].unique()):
+#     print(x, y)
+# df_book = df_book.to_dict()
+
+# # Lendo os dados históricos dos ativos ja registrados (e verificando se esse arquivo ja não existe)
+# try:
+#     df_historical_data = pd.read_csv('historical_data.csv', index_col=0)
+#     for ativo in ativos_na_carteira:
+#         pass
+# except:
+#     # columns = []
+#     # for ativo in ativos_na_carteira: 
+#     #     columns.extend([ativo, 'Date', 'Close'])
+#     columns = ['ativo', 'data', 'close']
+#     with TvDatafeed() as tv:
+#         for ativo, exchange in zip(ativos_na_carteira, :
+#             tv.search()
+        
+#     # columns = pd.MultiIndex.from_product([ativos_na_carteira, ['Date', 'Close']])
+#     df_historical_data = pd.DataFrame(columns=columns)
 
 # def atualizar_dados(ticker_name):
 #     for _ in range(3):
@@ -137,7 +167,7 @@ app.layout = dbc.Container(children=[
     dcc.Store(id='book_data_store', data=df_trades.to_dict(), storage_type='session'),
     dcc.Store(id='historical_data_store', data={}, storage_type='session'),
     dcc.Store(id='layout_data', data=[], storage_type='session'),
-    # dcc.Interval(id='interval_update', interval=1000*60),
+    dcc.Interval(id='interval_update', interval=1000*600),
     dbc.Row([
         dbc.Col([
             dbc.Row([
@@ -165,6 +195,8 @@ app.layout = dbc.Container(children=[
 ], fluid=True)
 
 # =========  Callbacks  =========== #
+# Update databases -----------------
+
 # Callback pages -------------------
 @app.callback(
     Output('page-content', 'children'), 
