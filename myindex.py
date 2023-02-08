@@ -30,34 +30,38 @@ recente de cada ativo. Na sequência fazer as requisições necessárias pro yfi
 '''
 
 # Checando se o book de transações existe
-# ativos_na_carteira = []
-# try:
-#     df_book = pd.read_csv('book_data.csv', index_col=0)
-#     ativos_na_carteira = list(df_book['ativo'].unique())
-#     ativos_na_carteira = [[ativo, exchange] for ativo, exchange in df_book['ativo'].unique(), df_book['exchange'].unique()]
-# except:
-#     df_book = pd.DataFrame(columns=['date', 'preco', 'tipo', 'ativo', 'exchange', 'vol', 'logo_url', 'valor_total'])
+ativos_org = {}
+try:    # caso exista, ler infos
+    df_book = pd.read_csv('book_data.csv', index_col=0)
+    
+    # Iterando sobre o df e salvando o ativo e sua exchange para a pesquisa
+    for index, row in df_book.iterrows():
+        if not any(row['ativo'] in sublist for sublist in ativos_org):  
+            ativos_org[row["ativo"]] = row['exchange']
+except: # caso não exista, criar df
+    df_book = pd.DataFrame(columns=['date', 'preco', 'tipo', 'ativo', 'exchange', 'vol', 'logo_url', 'valor_total'])
 
-# for x, y in zip(df_book['ativo'].unique(), df_book['exchange'].unique()):
-#     print(x, y)
-# df_book = df_book.to_dict()
 
-# # Lendo os dados históricos dos ativos ja registrados (e verificando se esse arquivo ja não existe)
-# try:
-#     df_historical_data = pd.read_csv('historical_data.csv', index_col=0)
-#     for ativo in ativos_na_carteira:
-#         pass
-# except:
-#     # columns = []
-#     # for ativo in ativos_na_carteira: 
-#     #     columns.extend([ativo, 'Date', 'Close'])
-#     columns = ['ativo', 'data', 'close']
-#     with TvDatafeed() as tv:
-#         for ativo, exchange in zip(ativos_na_carteira, :
-#             tv.search()
+# Lendo os dados históricos dos ativos ja registrados (e verificando se esse arquivo ja não existe)
+try:
+    df_historical_data = pd.read_csv('historical_data.csv', index_col=0)
+    for ativo in ativos_org:
+        pass
+except:
+    columns = ['datetime', 'symbol', 'close']
+    df_historical_data = pd.DataFrame(columns=columns)
+    tv = TvDatafeed()
+    for symb_dict in ativos_org.items():
+        lines = tv.get_hist(*symb_dict)[['symbol','close']].reset_index()
+        df_historical_data = pd.concat([df_historical_data, lines], ignore_index=True)
         
-#     # columns = pd.MultiIndex.from_product([ativos_na_carteira, ['Date', 'Close']])
-#     df_historical_data = pd.DataFrame(columns=columns)
+    # columns = pd.MultiIndex.from_product([ativos_na_carteira, ['Date', 'Close']])
+    # df_historical_data = pd.DataFrame(columns=columns)
+
+
+
+df_book = df_book.to_dict()
+
 
 # def atualizar_dados(ticker_name):
 #     for _ in range(3):
