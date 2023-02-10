@@ -9,6 +9,7 @@ from datetime import datetime, date
 import yfinance as yf
 from yfinance_class.y_class import Asimov_finance
 from dash_bootstrap_templates import ThemeSwitchAIO
+from pandas.tseries.offsets import DateOffset
 
 financer = Asimov_finance()
 
@@ -187,11 +188,46 @@ layout = dbc.Container([
     Output('line_graph', 'figure'),
     Input('dropdown_card1', 'value'),
     Input('period_input', 'value'),
-    # State('dcc_store_trades', 'data')
+    State('historical_data_store', 'data')
 )
-def func_card1(dropdown, period):
-    # return {} # REMOVER - TESTE
+def func_card1(dropdown, period, teste123):
+    if dropdown == None:
+        return no_update
+    if type(dropdown) != list: dropdown = [dropdown]
+    dropdown = ['BVSPX'] + dropdown
+
+    df = pd.DataFrame(teste123)
+    df = df[df.symbol.str.contains('|'.join(dropdown))]
+    df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
+
+    timedeltas = {'5d': DateOffset(days=5), '1mo': DateOffset(months=1), 
+                '3mo': DateOffset(months=3), '6mo': DateOffset(months=6),
+                '1y': DateOffset(years=1), '2y': DateOffset(years=2)}
+
+    if period == 'ytd':
+        correct_timedelta = date.today().replace(month=1, day=1)
+    else:
+        correct_timedelta = date.today() - timedeltas[period]
+
+    df = df[df.datetime > correct_timedelta]
     
+    df.sort_values(by='datetime', inplace=True)
+
+    fig = go.Figure()
+    for ticker in dropdown:
+        df_aux = df[df.symbol.str.contains(ticker)]
+        df_aux.dropna(inplace=True)
+        df_aux.close = df_aux.close / df_aux.close.iloc[0] - 1
+        fig.add_trace(go.Scatter(x=df_aux.datetime, y=df_aux.close*100, mode='lines', name=ticker))
+        
+    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    return fig
+
+
+
+    return {} # REMOVER - TESTE
+    
+
     if dropdown == None:
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
@@ -222,7 +258,6 @@ def func_card1(dropdown, period):
     Input('checklist_card2', 'value')
 )
 def func_card2(checklist):
-    print(checklist)
     '''
     Pegar todos os ticks e a sua representação no df. Na sequencia, ponderar essas representações a partir dos setores utilzando o código que foi comentado aqui abaixo
     '''

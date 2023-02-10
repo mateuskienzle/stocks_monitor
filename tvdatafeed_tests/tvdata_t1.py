@@ -17,6 +17,9 @@ get_hist(
 df = tv.get_hist('PETR4', 'BMFBOVESPA', n_bars=10)
 df.index.min()
 
+df = tv.get_hist('BVSPX', 'VANTAGE', n_bars=5000)
+df.reset_index(inplace=True)
+df.datetime.min()
 # Pra procurar se um simbolo existe, pattern-matching, não precisa ser o nome exato
 '''
 search_symbol(self, text: str, exchange: str = '') -> [dict, dict, dict2]

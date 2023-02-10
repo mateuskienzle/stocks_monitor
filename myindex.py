@@ -10,7 +10,7 @@ from tvDatafeed import TvDatafeed, Interval
 
 from app import *
 from components.page_inicial import financer
-from components import page_inicial, responsive_header, wallet, footer
+from components import page_inicial, responsive_header, wallet
 
 
 # PRIMEIRA INICIALIZAÇÃO =========================
@@ -29,79 +29,46 @@ recente de cada ativo. Na sequência fazer as requisições necessárias pro yfi
     - Cirar um dcc.Interval() para atualizar o historical_data.csv se necessário!
 '''
 
+# Funções =======================================
+def iterar_sobre_df_book(df_book_var: pd.DataFrame, ativos_org_var={}) -> dict:
+    for _, row in df_book_var.iterrows():
+        if not any(row['ativo'] in sublist for sublist in ativos_org_var):  
+            ativos_org_var[row["ativo"]] = row['exchange']
+    
+    ativos_org_var['BVSPX'] = 'VANTAGE'
+    return ativos_org_var
+
+def atualizar_historical_data(df_historical_var: pd.DataFrame, ativos_org_var={}) -> pd.DataFrame:
+    tv = TvDatafeed()
+    for symb_dict in ativos_org_var.items():
+        new_line = tv.get_hist(*symb_dict, n_bars=5000)[['symbol','close']].reset_index()
+        df_historical_var = pd.concat([df_historical_var, new_line], ignore_index=True)
+
+    return df_historical_var.drop_duplicates(ignore_index=True)
+    
+
 # Checando se o book de transações existe
 ativos_org = {}
 try:    # caso exista, ler infos
     df_book = pd.read_csv('book_data.csv', index_col=0)
-    
-    # Iterando sobre o df e salvando o ativo e sua exchange para a pesquisa
-    for index, row in df_book.iterrows():
-        if not any(row['ativo'] in sublist for sublist in ativos_org):  
-            ativos_org[row["ativo"]] = row['exchange']
+    ativos_org = iterar_sobre_df_book(df_book)
 except: # caso não exista, criar df
     df_book = pd.DataFrame(columns=['date', 'preco', 'tipo', 'ativo', 'exchange', 'vol', 'logo_url', 'valor_total'])
 
-
-# Lendo os dados históricos dos ativos ja registrados (e verificando se esse arquivo ja não existe)
+''' Lendo os dados históricos dos ativos ja registrados (e verificando se esse arquivo ja não existe)
+Sempre que quiser acessar o histórico de qualquer ativo, utilizar:
+    df_historical_data[df_historical_data.symbol == 'ativo']
+'''
 try:
     df_historical_data = pd.read_csv('historical_data.csv', index_col=0)
-    for ativo in ativos_org:
-        pass
 except:
     columns = ['datetime', 'symbol', 'close']
     df_historical_data = pd.DataFrame(columns=columns)
-    tv = TvDatafeed()
-    for symb_dict in ativos_org.items():
-        lines = tv.get_hist(*symb_dict)[['symbol','close']].reset_index()
-        df_historical_data = pd.concat([df_historical_data, lines], ignore_index=True)
-        
-    # columns = pd.MultiIndex.from_product([ativos_na_carteira, ['Date', 'Close']])
-    # df_historical_data = pd.DataFrame(columns=columns)
 
+df_historical_data = atualizar_historical_data(df_historical_data, ativos_org)
 
-
-df_book = df_book.to_dict()
-
-
-# def atualizar_dados(ticker_name):
-#     for _ in range(3):
-#         ticker = yf.Ticker(ticker_name)
-
-# # Lendo o book de transações
-# try:
-#     df_book = pd.read_csv('book_data.csv', index_col=0)
-# except: 
-#     df_book = pd.DataFrame(columns=['date', 'preco', 'tipo', 'ativo', 'vol', 'logo_url', 'valor_total'])
-
-# ativos_na_carteira = list(df_book['ativo'].unique())
-# df_book = df_book.to_dict()
-
-# # Lendo os dados históricos ja registrados - atualizando o que for necessário
-# try:
-#     df_historical_data = pd.read_csv('historical_data.csv', index_col=0)
-#     for ativo in ativos_na_carteira:
-#         pass
-## NOTE CONTINUAR DAQUI - LÓGICA DE REGISTRAR OS ATIVOS!
-# except:
-#     # Criando o df do formato que queremos
-#     columns = pd.MultiIndex.from_product([ativos_na_carteira, ['Date', 'Close']])
-#     df_historical_data = pd.DataFrame(columns=columns)
-
-
-# # Atualizando os dados a partir do df
-# df_book = df_book.to_dict()
-# df_historical_data = df_historical_data.to_dict()
-
-
-
-
-# Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-list_trades = [{"date": datetime(2021, 7, 23), 'preco': 123, 'tipo': 'Venda', 'ativo': 'ITUB4', 'vol': 10000, 'logo_url': 'https://logo.clearbit.com/itau.com.br', 'valor_total': 500},
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500, 'logo_url': 'https://logo.clearbit.com/magazineluiza.com.br', 'valor_total': 500 },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Venda', 'ativo': 'TTEN3', 'vol': 15000, 'logo_url': 'https://logo.clearbit.com/ri.3tentos.com.br', 'valor_total': 500 },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000, 'logo_url': 'https://logo.clearbit.com/vale.com.br', 'valor_total': 500 },
-                {"date": datetime(2018, 2, 2), 'preco': 123, 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000, 'logo_url': 'https://logo.clearbit.com/lojasrenner.com.br', 'valor_total': 500}]
-df_trades = pd.DataFrame(list_trades)
+df_book = df_book.to_dict() 
+df_historical_data = df_historical_data.to_dict()
 
 
 toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
@@ -112,7 +79,6 @@ toast = dbc.Toast("Seu ativo foi cadastrado com sucesso!",
                             duration = "4000",
                             icon="success",
                             style={"position": "fixed", "top": 66, "right": 10, "width": 350})
-
 
 def generate_card(info_do_ativo):
     new_card =  dbc.Row([
@@ -168,8 +134,8 @@ def generate_card(info_do_ativo):
     return new_card
 
 app.layout = dbc.Container(children=[
-    dcc.Store(id='book_data_store', data=df_trades.to_dict(), storage_type='session'),
-    dcc.Store(id='historical_data_store', data={}, storage_type='session'),
+    dcc.Store(id='book_data_store', data=df_book, storage_type='session'),
+    dcc.Store(id='historical_data_store', data=df_historical_data, storage_type='session'),
     dcc.Store(id='layout_data', data=[], storage_type='session'),
     dcc.Interval(id='interval_update', interval=1000*600),
     dbc.Row([
@@ -199,9 +165,7 @@ app.layout = dbc.Container(children=[
 ], fluid=True)
 
 # =========  Callbacks  =========== #
-# Update databases -----------------
-
-# Callback pages -------------------
+# Callback pages
 @app.callback(
     Output('page-content', 'children'), 
     Input('url', 'pathname'))
@@ -214,26 +178,50 @@ def render_page(pathname):
     if pathname == '/wallet':
         return wallet.layout
 
-# Callback pra guardar a data do yfinance
-# @app.callback(
-#     Output('historical_data_store', 'data'),
-#     Input('interval_update', 'n_intervals'),
-#     State('historical_data_store', 'data'),
-#     State('book_data_store', 'data')
-# )
-# def update_yahoo_finance_base(n, historical_data, book_data):
-#     if historical_data == {}:
-#         df = pd.DataFrame()
-#     return {}
 
-# Callback para salvar o book_data para CSV
+# Callback para atualizar as databases
 @app.callback(
-    Output('div_retorno', 'children'),
-    Input('book_data_store', 'data')
+    Output('historical_data_store', 'data'),
+    Input('interval_update', 'n_intervals'),
+    Input('book_data_store', 'data'),
+    State('historical_data_store', 'data')
 )
-def book_to_csv(book_data):
-    pd.DataFrame(book_data).to_csv('book_data.csv')
-    return []
+def atualizar_databases(n, book_data, historical_data):
+    df_book = pd.DataFrame(book_data)
+    df_historical = pd.DataFrame(historical_data)
+
+    ativos = iterar_sobre_df_book(df_book)
+    # import pdb; pdb.set_trace()
+    df_historical = atualizar_historical_data(df_historical, ativos)
+
+    # atualizando os CSV's
+    df_book.to_csv('book_data.csv')
+    df_historical.to_csv('historical_data.csv')
+
+    return df_historical.to_dict()
+
+
+if __name__ == "__main__":
+    app.run_server(debug=True, port=8051)  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # @app.callback(
@@ -338,6 +326,3 @@ def book_to_csv(book_data):
 #         lista_de_cards.append(card)
 
 #     return [not open, open, *retorno, '', df_data, lista_de_cards]
-
-if __name__ == "__main__":
-    app.run_server(debug=True, port=8051)  
