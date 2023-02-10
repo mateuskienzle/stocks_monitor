@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from app import *
 from datetime import datetime, date
+import pdb
 
 import yfinance as yf
 from yfinance_class.y_class import Asimov_finance
@@ -37,38 +38,72 @@ list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'Compra', 'ativo': 'ITUB4
 df_trades = pd.DataFrame(list_trades)
 
 
-new_card =  dbc.Row([
-            dbc.Col([
-                dbc.Card([
-                    dbc.CardBody([
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Row([
-                                    dbc.Col([
-                                        html.Legend(" Manchete ")
-                                    ]),
-                                ]),
-                                dbc.Row([
+# df_book = pd.read_csv('book_data.csv', index_col=0)
+# df_ativos_unique = df_book['ativo'].unique()
 
-                                    dbc.Col([
-                                        html.Legend(" Texto notícia ")
-                                    ]),
-                                ]),
-                                dbc.Row([
-                                    dbc.Col([
-                                        html.Legend(" Data notícia ")
-                                    ]),
-                                ]),
-                            ], md=10, xs=6),
-                            dbc.Col([
-                                html.Legend("Tag empresa")
-                            ], md=2, xs=12, style={'text-align' : 'right'})
-                        ])
-                    ])
-                ],style={'background-color' : '#000000'})
-            ],)
+tickers = yf.Tickers('PETR4.SA TTEN3.SA LREN3.SA ITUB4.SA MGLU3.SA VALE3.SA')
+noticias = tickers.news()
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+
+url = 'https://www.google.com/search?q={}+icon+logo&tbm=isch&ved=2ahUKEwj8283-zIb9AhX_TbgEHXvGCL0Q2-cCegQIABAA&oq=TTEN3+icon+logo&gs_lcp=CgNpbWcQAzoECCMQJzoGCAAQBxAeOgcIABCABBATOggIABAHEB4QEzoICAAQCBAHEB46BggAEAgQHlDtA1ibDmC7E2gBcAB4AIABiAGIAZEHkgEDMC43mAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=MfDjY7z_Lv-b4dUP-4yj6As&bih=634&biw=1240'
+
+def pegar_logo(symbol):
+  chrome_options = Options()
+  chrome_options.add_argument("--headless")
+  driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+  driver.get(url.format(symbol))
+  
+  img_div = driver.find_element(By.XPATH, '//*[@id="islrg"]/div[1]/div[1]/a[1]/div[1]/img')
+  return img_div.get_attribute('src')
+
+
+def generate_card_news(noticia_ativo):
+    new_card =  dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dcc.Link([
+                                dbc.CardBody([
+                                    dbc.Row([
+                                        dbc.Col([
+                                            dbc.Row([
+                                                dbc.Col([
+                                                    html.Legend(str(noticia_ativo['title']), style={"color": 'white'})
+                                                ]),
+                                            ]),
+                                            dbc.Row([
+                                                dbc.Col([
+                                                    html.Legend(str(noticia_ativo['publisher']), style={"color": 'gray', "fontSize": '95%', 'marginTop' : '1rem'})
+                                                ]),
+                                            ]),
+                                        ], md=10, xs=6),
+                                        dbc.Col([
+                                            html.Img(src=noticia_ativo['tickerLogo'], style={'width' : '50%', 'border-radius' : '15%'})
+                                        ], md=2, xs=12, style={'text-align' : 'right'})
+                                    ])
+                                ])
+                            ], href=noticia_ativo['link'], target='_blank')
+                        ], style={'background-color' : '#000000'})
+                    ],)
         ], className='g-2 my-auto')
+    return new_card
 
+def generate_list_of_news_cards(lista_tags_ativos):
+    lista_de_cards_noticias = []
+    for i in range(len(lista_tags_ativos)):
+        logo = pegar_logo(lista_tags_ativos[i])
+        for j in range(len(noticias[lista_tags_ativos[i]])):
+            noticias[lista_tags_ativos[i]][j]['tickerLogo'] = logo
+            card_news = generate_card_news(noticias[lista_tags_ativos[i]][j])
+            lista_de_cards_noticias.append(card_news)
+    return lista_de_cards_noticias
+
+
+cards_news = generate_list_of_news_cards(list(noticias.keys()))
 
 # =========  Layout  =========== #
 layout = dbc.Container([
@@ -156,26 +191,9 @@ layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card,
-                    new_card
+                    *cards_news
                 ])
-            ], id='asimov_news', style={"maxHeight": '61em', "overflow-y": "auto"})
+            ], id='asimov_news', style={"height": "100%", "maxHeight": '61em', "overflow-y": "auto"})
         ], xs=12, md=6)
     ], className='g-2 my-auto')
 ], fluid=True)
@@ -293,3 +311,20 @@ def func_card2(checklist):
 # def func_card2(checklist):
 #     print(checklist)
 #     return {}
+
+
+# @app.callback(
+#     Output('asimov_news_card_noticia', 'children'),
+#     Input('book_data_store', 'data')
+# )
+# def update_news(data):
+#     lista_de_cards_noticias = []
+#     # df_book = pd.read_csv('book_data.csv', index_col=0)
+#     # df_ativos_unique = df_book['ativo'].unique()
+#     # print('noticias aqui')
+#     # print('-------------------')
+#     for k, v in datastore['ativo'].items():
+#         lista_tags_ativos = v
+#         lista_de_cards_noticias = generate_list_of_news_cards(df_ativos_unique)
+#     return lista_de_cards_noticias
+
