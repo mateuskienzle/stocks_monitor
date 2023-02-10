@@ -14,6 +14,15 @@ from pandas.tseries.offsets import DateOffset
 
 financer = Asimov_finance()
 
+'''
+PRA SEGUNDA-FEIRA
+- Mudar o input dos componentes (dropdown etc) que ainda estão consumindo do df ficticio
+- Fazer o gráfico de radar
+- Ajeitar layout do wallet e asimov news (ver refs no miro)
+- Desativar de vez o df_trades
+- Criar graphs do card 3
+'''
+
 HEIGHT={'height': '100%'}
 PERIOD_OPTIONS = ['5d','1mo','3mo','6mo','1y','2y', 'ytd']
 MAIN_CONFIG = {
@@ -243,32 +252,32 @@ def func_card1(dropdown, period, teste123):
 
 
 
-    return {} # REMOVER - TESTE
+    # return {} # REMOVER - TESTE
     
 
-    if dropdown == None:
-        return no_update
-    if type(dropdown) != list: dropdown = [dropdown]
-    dropdown = ['^BVSP'] + dropdown
+    # if dropdown == None:
+    #     return no_update
+    # if type(dropdown) != list: dropdown = [dropdown]
+    # dropdown = ['^BVSP'] + dropdown
     
-    df_joined = pd.DataFrame()
-    for ticker in dropdown:
-        df = financer.get_symbol_object(ticker).history(period=period, interval='1d')[['Close']]
-        df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
+    # df_joined = pd.DataFrame()
+    # for ticker in dropdown:
+    #     df = financer.get_symbol_object(ticker).history(period=period, interval='1d')[['Close']]
+    #     df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
     
-    df_joined.dropna(inplace=True)
-    df_retorno = df_joined / df_joined.iloc[0] - 1
+    # df_joined.dropna(inplace=True)
+    # df_retorno = df_joined / df_joined.iloc[0] - 1
 
-    # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
-    # df_retorno = df_retorno.cumsum()
+    # # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
+    # # df_retorno = df_retorno.cumsum()
 
-    fig = go.Figure()
-    for ticker in dropdown:
-        fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker]*100, mode='lines', name=ticker, line_shape='spline'))
+    # fig = go.Figure()
+    # for ticker in dropdown:
+    #     fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker]*100, mode='lines', name=ticker, line_shape='spline'))
 
-    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    # fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
 
-    return fig
+    # return fig
 
 # callback card 2
 @app.callback(
