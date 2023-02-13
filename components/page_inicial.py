@@ -16,7 +16,7 @@ financer = Asimov_finance()
 
 '''
 PRA SEGUNDA-FEIRA
-- Mudar o input dos componentes (dropdown etc) que ainda estão consumindo do df ficticio
+- Mudar o input dos componentes (dropdown etc) que ainda estão consumindo do df ficticio - CHECK
 - Fazer o gráfico de radar
 - Ajeitar layout do wallet e asimov news (ver refs no miro)
 - Desativar de vez o df_trades
@@ -60,16 +60,16 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
 url = 'https://www.google.com/search?q={}+icon+logo&tbm=isch&ved=2ahUKEwj8283-zIb9AhX_TbgEHXvGCL0Q2-cCegQIABAA&oq=TTEN3+icon+logo&gs_lcp=CgNpbWcQAzoECCMQJzoGCAAQBxAeOgcIABCABBATOggIABAHEB4QEzoICAAQCBAHEB46BggAEAgQHlDtA1ibDmC7E2gBcAB4AIABiAGIAZEHkgEDMC43mAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=MfDjY7z_Lv-b4dUP-4yj6As&bih=634&biw=1240'
+chrome_options = Options()
+chrome_options.add_argument("--headless=new")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 def pegar_logo(symbol):
-  chrome_options = Options()
-  chrome_options.add_argument("--headless")
-  driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-  driver.get(url.format(symbol))
-  
-  img_div = driver.find_element(By.XPATH, '//*[@id="islrg"]/div[1]/div[1]/a[1]/div[1]/img')
-  return img_div.get_attribute('src')
-
+    global driver
+    driver.get(url.format(symbol))
+    
+    img_div = driver.find_element(By.XPATH, '//*[@id="islrg"]/div[1]/div[1]/a[1]/div[1]/img')
+    return img_div.get_attribute('src')
 
 def generate_card_news(noticia_ativo):
     new_card =  dbc.Row([
@@ -111,7 +111,6 @@ def generate_list_of_news_cards(lista_tags_ativos):
             lista_de_cards_noticias.append(card_news)
     return lista_de_cards_noticias
 
-
 cards_news = generate_list_of_news_cards(list(noticias.keys()))
 
 # =========  Layout  =========== #
@@ -124,8 +123,8 @@ layout = dbc.Container([
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col([
-                            dcc.Dropdown(id='dropdown_card1', className='dbc', value=df_trades['ativo'].unique()[0], multi=True, options=[{'label': x, 'value': x} for x in df_trades['ativo'].unique()]),
-                        ], sm=12, md=2),
+                            dcc.Dropdown(id='dropdown_card1', className='dbc', value=[], multi=True, options=[]),
+                        ], sm=12, md=3),
                         dbc.Col([
                             dbc.RadioItems(
                                 options=[{'label': x, 'value': x} for x in PERIOD_OPTIONS],
@@ -133,7 +132,7 @@ layout = dbc.Container([
                                 id="period_input",
                                 inline=True
                             ),
-                        ], sm=12, md=8),
+                        ], sm=12, md=7),
                         dbc.Col([
                             html.Span([
                                     dbc.Label(className='fa fa-percent'),
@@ -217,13 +216,13 @@ layout = dbc.Container([
     Input('period_input', 'value'),
     State('historical_data_store', 'data')
 )
-def func_card1(dropdown, period, teste123):
+def func_card1(dropdown, period, historical):
     if dropdown == None:
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
     dropdown = ['BVSPX'] + dropdown
 
-    df = pd.DataFrame(teste123)
+    df = pd.DataFrame(historical)
     df = df[df.symbol.str.contains('|'.join(dropdown))]
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
 
@@ -278,6 +277,18 @@ def func_card1(dropdown, period, teste123):
     # fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
 
     # return fig
+
+@app.callback(
+    Output('dropdown_card1', 'value'),
+    Output('dropdown_card1', 'options'),
+    Input('book_data_store', 'data'),
+)
+def atualizar_dropdown(book):
+    df = pd.DataFrame(book)
+    unique = df['ativo'].unique()
+    
+    return [unique[0], [{'label': x, 'value': x} for x in unique]]
+
 
 # callback card 2
 @app.callback(
