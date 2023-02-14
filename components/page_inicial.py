@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from app import *
 from datetime import datetime, date
-import pdb
+import numpy as np
 
 import yfinance as yf
 from yfinance_class.y_class import Asimov_finance
@@ -38,14 +38,21 @@ MAIN_CONFIG = {
 }
 
 # Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'Compra', 'ativo': 'ITUB4', 'vol': 10000},
-                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'TTEN3', 'vol': 15000 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000 },
-                {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000 }]
+# list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'Compra', 'ativo': 'ITUB4', 'vol': 10000},
+#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500 },
+#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'TTEN3', 'vol': 15000 },
+#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000 },
+#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000 }]
 
-df_trades = pd.DataFrame(list_trades)
+# df_trades = pd.DataFrame(list_trades)
 
+df_ibov = pd.read_csv('tabela_ibov.csv')
+
+df_ibov['Part. (%)'] = pd.to_numeric(df_ibov['Part. (%)'].str.replace(',','.'))
+df_ibov['Qtde. Teórica'] = pd.to_numeric(df_ibov['Qtde. Teórica'].str.replace('.', ''))
+df_ibov['Participação'] = df_ibov['Qtde. Teórica'] / df_ibov['Qtde. Teórica'].sum()
+df_ibov['Setor'] = df_ibov['Setor'].apply(lambda x: x.split('/')[0].rstrip())
+df_ibov['Setor'] = df_ibov['Setor'].apply(lambda x: 'Cons N Cíclico' if x == 'Cons N Ciclico' else x)
 
 # df_book = pd.read_csv('book_data.csv', index_col=0)
 # df_ativos_unique = df_book['ativo'].unique()
@@ -154,9 +161,17 @@ layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    dbc.Checklist(id='checklist_card2', value=[1], inline=True,
-                        options=[{'label': 'moda', 'value': 1}, {'label': 'siderurgica', 'value': 2}],persistence=True, persistence_type="session"),
-                    dcc.Graph(id='radar_graph', config={"displayModeBar": False, "showTips": False})
+                    dbc.Row([
+                        dbc.Col([
+                            html.Legend('Gestão Setorial IBOV'),
+                            dbc.Switch(id='ibov_switch', value=True, label="Comparativo"),
+                        ])
+                    ]),
+                    dbc.Row([
+                        dbc.Col([
+                            dcc.Graph(id='radar_graph', config={"displayModeBar": False, "showTips": False})
+                        ])
+                    ])
                 ])
             ], style=HEIGHT)
         ], xs=12, md=4)
@@ -249,34 +264,53 @@ def func_card1(dropdown, period, historical):
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
     return fig
 
+# Callback radar graph
+@app.callback(
+    Output('radar_graph', 'figure'),
+    Input('book_data_store', 'data'),
+    Input('ibov_switch', 'value')
+)
+def radar_graph(book_data, comparativo):
+    global df_ibov
+    df_registros = pd.DataFrame(book_data)
+
+    df_registros['vol'] = [-df_registros['vol'][x] if df_registros['tipo'][x] == 'Venda' else df_registros['vol'][x] for x in range(len(df_registros))]
+
+    if comparativo:
+        df_provisorio = df_ibov[df_ibov['Código'].isin(df_registros['ativo'].unique())]
+        df_provisorio['Participação2'] = df_provisorio['Participação'].apply(lambda x: x*100/df_provisorio['Participação'].sum())
+
+        ibov_setor = df_provisorio.groupby('Setor')['Participação2'].sum()
+
+        df_registros = df_registros[df_registros['ativo'].isin(df_ibov['Código'].unique())]
+        df_registros['Participação'] = df_registros['vol'].apply(lambda x: x*100/df_registros['vol'].sum())
+
+        df_registros = df_registros.groupby('ativo')['Participação'].sum()
+        df_registros = pd.DataFrame(df_registros).reset_index()
+        df_registros['setores'] = np.concatenate([df_provisorio[df_provisorio['Código'] == ativo]['Setor'].values for ativo in df_registros['ativo']])
+
+        df_registros = df_registros.groupby('setores')['Participação'].sum()
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatterpolar(r=ibov_setor, theta=ibov_setor.index, name='Distribuição IBOV', fill='toself',
+                                    hovertemplate ='<b>IBOV</b>'+'<br><b>Participação</b>: %{r:.2f}%'+ '<br><b>Setor</b>: %{theta}<br>'))
+        fig.add_trace(go.Scatterpolar(r=df_registros, theta=df_registros.index, name='Minha Carteira', fill='toself',
+                                    hovertemplate ='<b>CARTEIRA</b>'+'<br><b>Participação</b>: %{r:.2f}%'+ '<br><b>Setor</b>: %{theta}<br>'))
+
+        fig.update_traces(line={'shape': 'spline'})
+        fig.update_layout(showlegend=True)
+    else:
+        df_total_ibov = df_ibov.groupby('Setor')['Participação'].sum() * 100
+        fig = go.Figure()
+        fig.add_trace(go.Scatterpolar(r=df_total_ibov, theta=df_total_ibov.index, name='Distribuição IBOV', fill='toself',
+                                    hovertemplate ='<b>IBOV</b>'+'<br><b>Participação</b>: %{r:.2f}%'+ '<br><b>Setor</b>: %{theta}<br>'))
+
+        fig.update_traces(line={'shape': 'spline'})
+        fig.update_layout(showlegend=True)
+
+    return fig
 
 
-    # return {} # REMOVER - TESTE
-    
-
-    # if dropdown == None:
-    #     return no_update
-    # if type(dropdown) != list: dropdown = [dropdown]
-    # dropdown = ['^BVSP'] + dropdown
-    
-    # df_joined = pd.DataFrame()
-    # for ticker in dropdown:
-    #     df = financer.get_symbol_object(ticker).history(period=period, interval='1d')[['Close']]
-    #     df_joined = df_joined.join(df.rename(columns={"Close": ticker}), how='outer')
-    
-    # df_joined.dropna(inplace=True)
-    # df_retorno = df_joined / df_joined.iloc[0] - 1
-
-    # # Tipo 1 de gráfico - Ação x IBOV (RAW) ==============
-    # # df_retorno = df_retorno.cumsum()
-
-    # fig = go.Figure()
-    # for ticker in dropdown:
-    #     fig.add_trace(go.Scatter(x=df_retorno.index, y=df_retorno[ticker]*100, mode='lines', name=ticker, line_shape='spline'))
-
-    # fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
-
-    # return fig
 
 @app.callback(
     Output('dropdown_card1', 'value'),
@@ -290,38 +324,38 @@ def atualizar_dropdown(book):
     return [unique[0], [{'label': x, 'value': x} for x in unique]]
 
 
-# callback card 2
-@app.callback(
-    Output('radar_graph', 'figure'),
-    Input('checklist_card2', 'value')
-)
-def func_card2(checklist):
-    '''
-    Pegar todos os ticks e a sua representação no df. Na sequencia, ponderar essas representações a partir dos setores utilzando o código que foi comentado aqui abaixo
-    '''
-    data = []
-    quant = 200
+# # callback card 2
+# @app.callback(
+#     Output('radar_graph', 'figure'),
+#     Input('checklist_card2', 'value')
+# )
+# def func_card2(checklist):
+#     '''
+#     Pegar todos os ticks e a sua representação no df. Na sequencia, ponderar essas representações a partir dos setores utilzando o código que foi comentado aqui abaixo
+#     '''
+#     data = []
+#     quant = 200
 
-    # for tick in checklist:
-    #     if tick.info == None: continue
-    #     data.append({'Setor': tick.info['sector'], 'Quantidade': quant})
-    #     quant += quant*1/4
-    # df = pd.DataFrame(data)
+#     # for tick in checklist:
+#     #     if tick.info == None: continue
+#     #     data.append({'Setor': tick.info['sector'], 'Quantidade': quant})
+#     #     quant += quant*1/4
+#     # df = pd.DataFrame(data)
 
-    # fig = go.Figure()
-    # fig.add_trace(go.Scatterpolar(r=df['Quantidade']/100, theta=df['Setor'], fill='toself', name='Minha Carteira'))
-    # fig.update_layout(height=500)
-    # fig.add_annotation(text=f'Distribuição da carteira relativo à BVSP/setor',
-    #     xref="paper", yref="paper",
-    #     font=dict(
-    #         family="Courier New, monospace",
-    #         size=20,
-    #         color="#ffffff"),
-    #     align="center", bgcolor="rgba(0,0,0,0.5)", opacity=0.8,
-    #     x=0.9, y=0.1, showarrow=False)
+#     # fig = go.Figure()
+#     # fig.add_trace(go.Scatterpolar(r=df['Quantidade']/100, theta=df['Setor'], fill='toself', name='Minha Carteira'))
+#     # fig.update_layout(height=500)
+#     # fig.add_annotation(text=f'Distribuição da carteira relativo à BVSP/setor',
+#     #     xref="paper", yref="paper",
+#     #     font=dict(
+#     #         family="Courier New, monospace",
+#     #         size=20,
+#     #         color="#ffffff"),
+#     #     align="center", bgcolor="rgba(0,0,0,0.5)", opacity=0.8,
+#     #     x=0.9, y=0.1, showarrow=False)
 
 
-    return {}
+#     return {}
 
 # callback card asimov news
 # @app.callback(
@@ -339,8 +373,8 @@ def func_card2(checklist):
 # )
 # def update_news(data):
 #     lista_de_cards_noticias = []
-#     # df_book = pd.read_csv('book_data.csv', index_col=0)
-#     # df_ativos_unique = df_book['ativo'].unique()
+#     # df_registros = pd.read_csv('book_data.csv', index_col=0)
+#     # df_ativos_unique = df_registros['ativo'].unique()
 #     # print('noticias aqui')
 #     # print('-------------------')
 #     for k, v in datastore['ativo'].items():
