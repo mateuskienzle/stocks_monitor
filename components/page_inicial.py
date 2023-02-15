@@ -37,15 +37,6 @@ MAIN_CONFIG = {
     "margin": {"l":0, "r":0, "t":10, "b":0}
 }
 
-# Salvar esse df_carteira em um dcc.Store(id=' ', data={}) -> df_carteira.to_dict()
-# list_trades = [{"date": datetime(2021, 7, 23), 'tipo': 'Compra', 'ativo': 'ITUB4', 'vol': 10000},
-#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'MGLU3', 'vol': 7500 },
-#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'TTEN3', 'vol': 15000 },
-#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'VALE3', 'vol': 29000 },
-#                 {"date": datetime(2018, 2, 2), 'tipo': 'Compra', 'ativo': 'LREN3', 'vol': 50000 }]
-
-# df_trades = pd.DataFrame(list_trades)
-
 df_ibov = pd.read_csv('tabela_ibov.csv')
 
 df_ibov['Part. (%)'] = pd.to_numeric(df_ibov['Part. (%)'].str.replace(',','.'))
@@ -54,8 +45,6 @@ df_ibov['Participação'] = df_ibov['Qtde. Teórica'] / df_ibov['Qtde. Teórica'
 df_ibov['Setor'] = df_ibov['Setor'].apply(lambda x: x.split('/')[0].rstrip())
 df_ibov['Setor'] = df_ibov['Setor'].apply(lambda x: 'Cons N Cíclico' if x == 'Cons N Ciclico' else x)
 
-# df_book = pd.read_csv('book_data.csv', index_col=0)
-# df_ativos_unique = df_book['ativo'].unique()
 
 tickers = yf.Tickers('PETR4.SA TTEN3.SA LREN3.SA ITUB4.SA MGLU3.SA VALE3.SA')
 noticias = tickers.news()
@@ -262,6 +251,8 @@ def func_card1(dropdown, period, historical):
         fig.add_trace(go.Scatter(x=df_aux.datetime, y=df_aux.close*100, mode='lines', name=ticker))
         
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    fig.update_traces(line={'shape': 'spline'})
+
     return fig
 
 # Callback radar graph
@@ -297,16 +288,14 @@ def radar_graph(book_data, comparativo):
         fig.add_trace(go.Scatterpolar(r=df_registros, theta=df_registros.index, name='Minha Carteira', fill='toself',
                                     hovertemplate ='<b>CARTEIRA</b>'+'<br><b>Participação</b>: %{r:.2f}%'+ '<br><b>Setor</b>: %{theta}<br>'))
 
-        fig.update_traces(line={'shape': 'spline'})
-        fig.update_layout(showlegend=True)
     else:
         df_total_ibov = df_ibov.groupby('Setor')['Participação'].sum() * 100
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(r=df_total_ibov, theta=df_total_ibov.index, name='Distribuição IBOV', fill='toself',
                                     hovertemplate ='<b>IBOV</b>'+'<br><b>Participação</b>: %{r:.2f}%'+ '<br><b>Setor</b>: %{theta}<br>'))
 
-        fig.update_traces(line={'shape': 'spline'})
-        fig.update_layout(showlegend=True)
+    fig.update_traces(line={'shape': 'spline'})
+    fig.update_layout(MAIN_CONFIG, showlegend=True)
 
     return fig
 

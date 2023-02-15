@@ -12,7 +12,7 @@ df = pd.read_csv('tabela_ibov.csv')
 df['Qtde. Teórica'] = pd.to_numeric(df['Qtde. Teórica'].str.replace('.', ''))
 df['Participação'] = df['Qtde. Teórica'] / df['Qtde. Teórica'].sum()
 
-# df['Participação'].sum()
+# df['Participação'].sum()  
 # df.groupby('Setor')['Participação'].sum()
 
 df['Setor'] = df['Setor'].apply(lambda x: x.split('/')[0].rstrip())
