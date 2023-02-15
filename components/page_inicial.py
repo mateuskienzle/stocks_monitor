@@ -225,9 +225,9 @@ def func_card1(dropdown, period, historical):
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
     dropdown = ['BVSPX'] + dropdown
-
+    
     df = pd.DataFrame(historical)
-    df = df[df.symbol.str.contains('|'.join(dropdown))]
+    df = df[df['symbol'].str.contains('|'.join(dropdown))]
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
 
     timedeltas = {'5d': DateOffset(days=5), '1mo': DateOffset(months=1), 
