@@ -82,7 +82,7 @@ def generate_card_news(noticia_ativo):
                                             ]),
                                             dbc.Row([
                                                 dbc.Col([
-                                                    html.Legend("Fonte: " + str(noticia_ativo['publisher']), style={"color": 'gray', "fontSize": '95%', 'marginTop' : '1rem'})
+                                                    html.Legend("Fonte: " + str(noticia_ativo['publisher']), style={"color": 'gray',  'marginTop' : '1rem'})
                                                 ]),
                                             ]),
                                         ], md=10, xs=6),
