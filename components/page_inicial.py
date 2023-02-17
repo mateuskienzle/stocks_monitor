@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from app import *
 from datetime import datetime, date
 import numpy as np
+import random
 
 import yfinance as yf
 from yfinance_class.y_class import Asimov_finance
@@ -105,6 +106,8 @@ def generate_list_of_news_cards(lista_tags_ativos):
             noticias[lista_tags_ativos[i]][j]['tickerLogo'] = logo
             card_news = generate_card_news(noticias[lista_tags_ativos[i]][j])
             lista_de_cards_noticias.append(card_news)
+
+    random.shuffle(lista_de_cards_noticias,random.random)
     return lista_de_cards_noticias
 
 cards_news = generate_list_of_news_cards(list(noticias.keys()))
