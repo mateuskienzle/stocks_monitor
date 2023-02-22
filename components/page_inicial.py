@@ -23,8 +23,11 @@ PRA SEGUNDA-FEIRA
 - Criar graphs do card 3
 '''
 
-HEIGHT={'height': '100%'}
+offsets = [DateOffset(days=5), DateOffset(months=1), DateOffset(months=3), DateOffset(months=6), DateOffset(years=1), DateOffset(years=2)] 
 PERIOD_OPTIONS = ['5d','1mo','3mo','6mo','1y','2y', 'ytd']
+TIMEDELTAS = {x: y for x, y in zip(PERIOD_OPTIONS, offsets)}
+
+HEIGHT={'height': '100%'}
 MAIN_CONFIG = {
     "hovermode": "x unified",
     "legend": {"yanchor":"top", 
@@ -59,6 +62,10 @@ url = 'https://www.google.com/search?q={}+icon+logo&tbm=isch&ved=2ahUKEwj8283-zI
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
+def slice_df_timedeltas(df: pd.DataFrame, correct_timedelta: pd.DateOffset) -> pd.DataFrame:
+    df = df[df.datetime > correct_timedelta].sort_values(by='datetime')
+    return df
 
 def pegar_logo(symbol):
     global driver
@@ -221,27 +228,29 @@ layout = dbc.Container([
     State('historical_data_store', 'data')
 )
 def func_card1(dropdown, period, historical):
+    global TIMEDELTAS
+
     if dropdown == None:
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
     dropdown = ['BVSPX'] + dropdown
-    
+
     df = pd.DataFrame(historical)
     df = df[df['symbol'].str.contains('|'.join(dropdown))]
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
 
-    timedeltas = {'5d': DateOffset(days=5), '1mo': DateOffset(months=1), 
-                '3mo': DateOffset(months=3), '6mo': DateOffset(months=6),
-                '1y': DateOffset(years=1), '2y': DateOffset(years=2)}
+    # timedeltas = {'5d': DateOffset(days=5), '1mo': DateOffset(months=1), 
+    #             '3mo': DateOffset(months=3), '6mo': DateOffset(months=6),
+    #             '1y': DateOffset(years=1), '2y': DateOffset(years=2)}
 
     if period == 'ytd':
         correct_timedelta = date.today().replace(month=1, day=1)
     else:
-        correct_timedelta = date.today() - timedeltas[period]
+        correct_timedelta = date.today() - TIMEDELTAS[period]
 
-    df = df[df.datetime > correct_timedelta]
+    # df = df[df.datetime > correct_timedelta]
     
-    df.sort_values(by='datetime', inplace=True)
+    # df.sort_values(by='datetime', inplace=True)
 
     fig = go.Figure()
     for ticker in dropdown:
@@ -263,9 +272,11 @@ def func_card1(dropdown, period, historical):
 )
 def radar_graph(book_data, comparativo):
     global df_ibov
+
     df_registros = pd.DataFrame(book_data)
 
-    df_registros['vol'] = [-df_registros['vol'][x] if df_registros['tipo'][x] == 'Venda' else df_registros['vol'][x] for x in range(len(df_registros))]
+    df_registros['vol'] = abs(df_registros['vol']) * df_registros['tipo'].replace({'Compra': 1, 'Venda': -1})
+    # df_registros['vol'] = [-df_registros['vol'][x] if df_registros['tipo'][x] == 'Venda' else df_registros['vol'][x] for x in range(len(df_registros))]
 
     if comparativo:
         df_provisorio = df_ibov[df_ibov['Código'].isin(df_registros['ativo'].unique())]
@@ -299,8 +310,6 @@ def radar_graph(book_data, comparativo):
 
     return fig
 
-
-
 @app.callback(
     Output('dropdown_card1', 'value'),
     Output('dropdown_card1', 'options'),
@@ -311,63 +320,4 @@ def atualizar_dropdown(book):
     unique = df['ativo'].unique()
     
     return [unique[0], [{'label': x, 'value': x} for x in unique]]
-
-
-# # callback card 2
-# @app.callback(
-#     Output('radar_graph', 'figure'),
-#     Input('checklist_card2', 'value')
-# )
-# def func_card2(checklist):
-#     '''
-#     Pegar todos os ticks e a sua representação no df. Na sequencia, ponderar essas representações a partir dos setores utilzando o código que foi comentado aqui abaixo
-#     '''
-#     data = []
-#     quant = 200
-
-#     # for tick in checklist:
-#     #     if tick.info == None: continue
-#     #     data.append({'Setor': tick.info['sector'], 'Quantidade': quant})
-#     #     quant += quant*1/4
-#     # df = pd.DataFrame(data)
-
-#     # fig = go.Figure()
-#     # fig.add_trace(go.Scatterpolar(r=df['Quantidade']/100, theta=df['Setor'], fill='toself', name='Minha Carteira'))
-#     # fig.update_layout(height=500)
-#     # fig.add_annotation(text=f'Distribuição da carteira relativo à BVSP/setor',
-#     #     xref="paper", yref="paper",
-#     #     font=dict(
-#     #         family="Courier New, monospace",
-#     #         size=20,
-#     #         color="#ffffff"),
-#     #     align="center", bgcolor="rgba(0,0,0,0.5)", opacity=0.8,
-#     #     x=0.9, y=0.1, showarrow=False)
-
-
-#     return {}
-
-# callback card asimov news
-# @app.callback(
-#     Output('asimov_news', 'children'),
-#     Input('checklist_card2', 'data')
-# )
-# def func_card2(checklist):
-#     print(checklist)
-#     return {}
-
-
-# @app.callback(
-#     Output('asimov_news_card_noticia', 'children'),
-#     Input('book_data_store', 'data')
-# )
-# def update_news(data):
-#     lista_de_cards_noticias = []
-#     # df_registros = pd.read_csv('book_data.csv', index_col=0)
-#     # df_ativos_unique = df_registros['ativo'].unique()
-#     # print('noticias aqui')
-#     # print('-------------------')
-#     for k, v in datastore['ativo'].items():
-#         lista_tags_ativos = v
-#         lista_de_cards_noticias = generate_list_of_news_cards(df_ativos_unique)
-#     return lista_de_cards_noticias
 
