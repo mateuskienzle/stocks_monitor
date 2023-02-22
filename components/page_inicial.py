@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from app import *
 from datetime import datetime, date
 import numpy as np
+import random
 
 import yfinance as yf
 from yfinance_class.y_class import Asimov_finance
@@ -89,7 +90,7 @@ def generate_card_news(noticia_ativo):
                                             ]),
                                             dbc.Row([
                                                 dbc.Col([
-                                                    html.Legend(str(noticia_ativo['publisher']), style={"color": 'gray', "fontSize": '95%', 'marginTop' : '1rem'})
+                                                    html.Legend("Fonte: " + str(noticia_ativo['publisher']), style={"color": 'gray',  'marginTop' : '1rem'})
                                                 ]),
                                             ]),
                                         ], md=10, xs=6),
@@ -112,6 +113,8 @@ def generate_list_of_news_cards(lista_tags_ativos):
             noticias[lista_tags_ativos[i]][j]['tickerLogo'] = logo
             card_news = generate_card_news(noticias[lista_tags_ativos[i]][j])
             lista_de_cards_noticias.append(card_news)
+
+    random.shuffle(lista_de_cards_noticias,random.random)
     return lista_de_cards_noticias
 
 cards_news = generate_list_of_news_cards(list(noticias.keys()))
@@ -174,45 +177,29 @@ layout = dbc.Container([
     ], className='g-2 my-auto'),
     # Linha 2
     dbc.Row([
-        # Card 3 - card multiplo
+        # Card 3 - indicator graph
         dbc.Col([
-            dbc.Row([
-                dbc.Col([
-                    dbc.Card([
-                        dbc.CardBody([
-                            dcc.Graph(id='indicator_graph', config={"displayModeBar": False, "showTips": False})
-                        ])
-                    ], style={'height': '100%'})
-                ], xs=6, md=4),
-                dbc.Col([
-                    dbc.Row([
-                        dbc.Col([
-                            dbc.Card([
-                                dbc.CardBody([
-                                    dcc.Graph(id='line2_graph', config={"displayModeBar": False, "showTips": False})
-                                ])
-                            ], style=HEIGHT)
-                        ])
-                    ], className='my-auto', style={'height': '50%'}),
-                    dbc.Row([
-                        dbc.Col([
-                            dbc.Card([
-                                dbc.CardBody([
-                                    dcc.Graph(id='podium_graph', config={"displayModeBar": False, "showTips": False})
-                                ])
-                            ], style=HEIGHT)
-                        ])
-                    ], className='g-2 my-auto', style={'height': '50%'})
-                ], xs=6, md=8)
-            ], style=HEIGHT, className='g-2')
-        ], xs=12, md=6),
-        # Card 4
+            dbc.Card([
+                dbc.CardBody([
+                    dcc.Graph(id='indicator_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT)
+                ])
+            ], style=HEIGHT)
+        ], xs=6, md=3),
+        # Card 4 -podium graph
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    dcc.Graph(id='podium_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT)
+                ])
+            ], style=HEIGHT)
+        ], xs=6, md=3),
+        # Card 5 - asimov news
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
                     *cards_news
                 ])
-            ], id='asimov_news', style={"height": "100%", "maxHeight": '61em', "overflow-y": "auto"})
+            ], id='asimov_news', style={"height": "100%", "maxHeight": "35rem", "overflow-y": "auto"})
         ], xs=12, md=6)
     ], className='g-2 my-auto')
 ], fluid=True)
@@ -234,7 +221,7 @@ def func_card1(dropdown, period, historical):
         return no_update
     if type(dropdown) != list: dropdown = [dropdown]
     dropdown = ['BVSPX'] + dropdown
-
+    
     df = pd.DataFrame(historical)
     df = df[df['symbol'].str.contains('|'.join(dropdown))]
     df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d %H:%M:%S')
