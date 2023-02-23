@@ -239,7 +239,7 @@ layout = dbc.Container([
                     dcc.Graph(id='indicator_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT),
                 ])
             ], style=HEIGHT)
-        ], xs=6, md=3),
+        ], xs=6, md=2),
         # Card 4 -podium graph
         dbc.Col([
             dbc.Card([
@@ -247,7 +247,7 @@ layout = dbc.Container([
                     dcc.Graph(id='podium_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT)
                 ])
             ], style=HEIGHT)
-        ], xs=6, md=3),
+        ], xs=6, md=4),
         # Card 5 - asimov news
         dbc.Col([
             dbc.Card([
