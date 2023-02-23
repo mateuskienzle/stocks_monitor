@@ -3,10 +3,12 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from app import *
 from datetime import datetime, date
 import numpy as np
 import random
+from math import log10, floor
 
 import threading
 
@@ -18,8 +20,11 @@ from pandas.tseries.offsets import DateOffset
 financer = Asimov_finance()
 
 offsets = [DateOffset(days=5), DateOffset(months=1), DateOffset(months=3), DateOffset(months=6), DateOffset(years=1), DateOffset(years=2)] 
+delta_titles = ['5 dias', '1 mês', '3 meses', '6 meses', '1 ano', '2 anos', 'Ano até agora']
 PERIOD_OPTIONS = ['5d','1mo','3mo','6mo','1y','2y', 'ytd']
+
 TIMEDELTAS = {x: y for x, y in zip(PERIOD_OPTIONS, offsets)}
+TITLES = {x: y for x, y in zip(PERIOD_OPTIONS, delta_titles)}
 
 HEIGHT={'height': '100%'}
 MAIN_CONFIG = {
@@ -42,7 +47,6 @@ df_ibov['Participação'] = df_ibov['Qtde. Teórica'] / df_ibov['Qtde. Teórica'
 df_ibov['Setor'] = df_ibov['Setor'].apply(lambda x: x.split('/')[0].rstrip())
 df_ibov['Setor'] = df_ibov['Setor'].apply(lambda x: 'Cons N Cíclico' if x == 'Cons N Ciclico' else x)
 
-
 tickers = yf.Tickers('PETR4.SA TTEN3.SA LREN3.SA ITUB4.SA MGLU3.SA VALE3.SA')
 noticias = tickers.news()
 
@@ -55,10 +59,60 @@ from selenium.webdriver.chrome.options import Options
 url = 'https://www.google.com/search?q={}+icon+logo&tbm=isch&ved=2ahUKEwj8283-zIb9AhX_TbgEHXvGCL0Q2-cCegQIABAA&oq=TTEN3+icon+logo&gs_lcp=CgNpbWcQAzoECCMQJzoGCAAQBxAeOgcIABCABBATOggIABAHEB4QEzoICAAQCBAHEB46BggAEAgQHlDtA1ibDmC7E2gBcAB4AIABiAGIAZEHkgEDMC43mAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=MfDjY7z_Lv-b4dUP-4yj6As&bih=634&biw=1240'
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-def slice_df_timedeltas(df: pd.DataFrame, correct_timedelta: pd.DateOffset) -> pd.DataFrame:
-    df = df[df.datetime > correct_timedelta].sort_values(by='datetime')
+def formatar_grandes_numeros(num, ends=["", "K", "M", "B", "T"]):
+    # divides by 3 to separate into thousands (...000) Divide por 3 os separadores de milhar
+	return ends[int(floor(log10(num))/3)]
+
+def definir_evolucao_patrimonial(df_historical_data: pd.DataFrame, df_book_data: pd.DataFrame) -> pd.DataFrame:
+    df_historical_data = df_historical_data.set_index('datetime')
+    df_historical_data['date'] = df_historical_data.index.date
+    df_historical_data = df_historical_data.groupby(['date', 'symbol'])['close'].last().to_frame().reset_index()
+    df_historical_data = df_historical_data.pivot(values='close', columns='symbol', index='date')
+
+    df_cotacoes = df_historical_data.copy()
+    df_carteira = df_historical_data.copy()
+
+    df_cotacoes = df_cotacoes.replace({0: np.nan}).ffill().fillna(0)
+    df_cotacoes.columns = [col.split(':')[-1] for col in df_cotacoes.columns]
+    df_carteira.columns = [col.split(':')[-1] for col in df_carteira.columns]
+    
+    del df_carteira['BVSPX'], df_cotacoes['BVSPX']
+
+    df_book_data['vol'] = df_book_data['vol'] * df_book_data['tipo'].replace({'Compra': 1, 'Venda': -1})
+    df_book_data['date'] = pd.to_datetime(df_book_data.date)
+    df_book_data.index = df_book_data['date'] 
+    df_book_data['date'] = df_book_data.index.date
+    
+    df_carteira.iloc[:, :] = 0
+    for _, row in df_book_data.iterrows():
+        df_carteira.loc[df_carteira.index >= row['date'], row['ativo']] += row['vol']
+    
+    df_patrimonio = df_cotacoes * df_carteira
+    df_patrimonio = df_patrimonio.fillna(0)
+    df_patrimonio['soma'] = df_patrimonio.sum(axis=1)
+
+    df_ops = df_carteira - df_carteira.shift(1)
+    df_ops = df_ops * df_cotacoes
+    
+    df_patrimonio['evolucao_patrimonial'] = df_patrimonio['soma'].diff() - df_ops.sum(axis=1)           # .plot()
+    df_patrimonio['evolucao_percentual'] = (df_patrimonio['evolucao_patrimonial'] / df_patrimonio['soma'])
+
+    ev_total_list = [1]*len(df_patrimonio)
+    df_patrimonio['evolucao_percentual'] = df_patrimonio['evolucao_percentual'].fillna(0)
+    
+    for i, x in enumerate(df_patrimonio['evolucao_percentual'].to_list()[1:]):
+        ev_total_list[i+1] = ev_total_list[i] * (1 + x)
+        df_patrimonio['evolucao_cum'] = ev_total_list
+    
+    return df_patrimonio
+
+def slice_df_timedeltas(df: pd.DataFrame, period_string: str) -> pd.DataFrame:
+    if period_string == 'ytd':
+        correct_timedelta = date.today().replace(month=1, day=1)
+    else:
+        correct_timedelta = date.today() - TIMEDELTAS[period_string]
+    df = df[df.datetime > correct_timedelta].sort_values('datetime')
     return df
 
 def pegar_logo(symbol, logos, count):
@@ -102,7 +156,6 @@ def generate_list_of_news_cards(lista_tags_ativos):
     lista_de_cards_noticias = []
     logos = {}
 
-    # # TESTE =====================
     threads = []
     for i, tags_ativos in enumerate(lista_tags_ativos):
         threads.append(threading.Thread(target=pegar_logo, args=(tags_ativos, logos, i)))
@@ -110,10 +163,6 @@ def generate_list_of_news_cards(lista_tags_ativos):
 
     for t in threads:
         t.join()
-    # # TESTE =====================
-
-    # for i in range(len(lista_tags_ativos)):
-    #     logos[i] = pegar_logo(lista_tags_ativos[i], logos, i)
     
     for i in range(len(lista_tags_ativos)):
         for j in range(len(noticias[lista_tags_ativos[i]])):
@@ -124,7 +173,6 @@ def generate_list_of_news_cards(lista_tags_ativos):
     random.shuffle(lista_de_cards_noticias,random.random)
     return lista_de_cards_noticias
 
-# cards_news = generate_list_of_news_cards(list(noticias.keys()))
 
 # =========  Layout  =========== #
 layout = dbc.Container([
@@ -188,7 +236,7 @@ layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    dcc.Graph(id='indicator_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT)
+                    dcc.Graph(id='indicator_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT),
                 ])
             ], style=HEIGHT)
         ], xs=6, md=3),
@@ -203,9 +251,7 @@ layout = dbc.Container([
         # Card 5 - asimov news
         dbc.Col([
             dbc.Card([
-                dbc.CardBody( id='cardbodytest'
-                    # *cards_news
-                )
+                dbc.CardBody(id='cardbodytest')
             ], id='asimov_news', style={"height": "100%", "maxHeight": "35rem", "overflow-y": "auto"})
         ], xs=12, md=6)
     ], className='g-2 my-auto')
@@ -230,60 +276,14 @@ def func_card1(dropdown, period, profit_switch, book_info, historical_info):
     dropdown = ['BVSPX'] + dropdown
     
     df_hist = pd.DataFrame(historical_info)
-
     df_hist['datetime'] = pd.to_datetime(df_hist['datetime'], format='%Y-%m-%d %H:%M:%S')
-
-    if period == 'ytd':
-        correct_timedelta = date.today().replace(month=1, day=1)
-    else:
-        correct_timedelta = date.today() - TIMEDELTAS[period]
-    df_hist = slice_df_timedeltas(df_hist, correct_timedelta)
+    df_hist = slice_df_timedeltas(df_hist, period)
 
     fig = go.Figure()
 
-    import pdb
     if profit_switch:
-        df_book = pd.DataFrame(book_info)
-        
-        df_hist = df_hist.set_index('datetime')
-        df_hist['date'] = df_hist.index.date
-        df_hist = df_hist.groupby(['date', 'symbol'])['close'].last().to_frame().reset_index()
-        df_hist = df_hist.pivot(values='close', columns='symbol', index='date')
-
-        df_cotacoes = df_hist.copy()
-        df_carteira = df_hist.copy()
-
-        df_cotacoes = df_cotacoes.replace({0: np.nan}).ffill().fillna(0)
-        df_cotacoes.columns = [col.split(':')[-1] for col in df_cotacoes.columns]
-        df_carteira.columns = [col.split(':')[-1] for col in df_carteira.columns]
-        
-        del df_carteira['BVSPX'], df_cotacoes['BVSPX']
-
-        df_book['vol'] = df_book['vol'] * df_book['tipo'].replace({'Compra': 1, 'Venda': -1})
-        df_book['date'] = pd.to_datetime(df_book.date)
-        df_book.index = df_book['date'] 
-        df_book['date'] = df_book.index.date
-        
-        df_carteira.iloc[:, :] = 0
-        for _, row in df_book.iterrows():
-            df_carteira.loc[df_carteira.index >= row['date'], row['ativo']] += row['vol']
-        
-        df_patrimonio = df_cotacoes * df_carteira
-        df_patrimonio = df_patrimonio.fillna(0)
-        df_patrimonio['soma'] = df_patrimonio.sum(axis=1)
-
-        df_ops = df_carteira - df_carteira.shift(1)
-        df_ops = df_ops * df_cotacoes
-        
-        df_patrimonio['evolucao_patrimonial'] = df_patrimonio['soma'].diff() - df_ops.sum(axis=1)           # .plot()
-        df_patrimonio['evolucao_percentual'] = (df_patrimonio['evolucao_patrimonial'] / df_patrimonio['soma'])
-
-        ev_total_list = [1]*len(df_patrimonio)
-        df_patrimonio['evolucao_percentual'] = df_patrimonio['evolucao_percentual'].fillna(0)
-        
-        for i, x in enumerate(df_patrimonio['evolucao_percentual'].to_list()[1:]):
-            ev_total_list[i+1] = ev_total_list[i] * (1 + x)
-            df_patrimonio['evolucao_cum'] = ev_total_list
+        df_book = pd.DataFrame(book_info)  
+        df_patrimonio = definir_evolucao_patrimonial(df_hist, df_book)
         
         fig.add_trace(go.Scatter(x=df_patrimonio.index, y=(df_patrimonio['evolucao_cum']- 1) * 100, mode='lines', name='Evolução Patrimonial'))
     
@@ -340,6 +340,57 @@ def radar_graph(book_data, comparativo):
 
     return fig
 
+
+# callback indicator
+@app.callback(
+    Output('indicator_graph', 'figure'),
+    Input('book_data_store', 'data'),
+    Input('period_input', 'value'),
+    State('historical_data_store', 'data')
+)
+def indicator_graph_function(book_data, period, historical_data):
+    df_book = pd.DataFrame(book_data)
+    df_hist = pd.DataFrame(historical_data)
+
+    df_book['datetime'] = pd.to_datetime(df_book['date'], format='%Y-%m-%d %H:%M:%S')
+    # df_book = slice_df_timedeltas(df_book, period)
+    df_hist['datetime'] = pd.to_datetime(df_hist['datetime'], format='%Y-%m-%d %H:%M:%S')
+    # df_hist = slice_df_timedeltas(df_hist, period)
+    
+    df_patrimonio = definir_evolucao_patrimonial(df_hist, df_book)
+    if period == 'ytd':
+        correct_timedelta = date.today().replace(month=1, day=1)
+    else:
+        correct_timedelta = date.today() - TIMEDELTAS[period]
+    df_patrimonio = df_patrimonio[df_patrimonio.index > correct_timedelta].sort_values(by='date')
+
+    period = TITLES[period]
+
+    fig = go.Figure()
+    # fig = make_subplots(rows=2, cols=1, vertical_spacing=0.1)
+
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        title = {"text": f"Evolução Patrimonial<br><span style='font-size:0.8em;color:gray'>Ambos relativos a: {period}</span>"},
+        value = df_patrimonio['soma'][-1],
+        number = {'prefix': "R$", 'valueformat': '.2s'},
+        delta = {'relative': True, 'valueformat': '.1%', 'reference': df_patrimonio['soma'][1]},
+        domain = {'row': 0, 'column': 0}
+    ))
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        title = {"text": f"Percentual"},
+        value = df_patrimonio['evolucao_cum'][-1],
+        number = {'suffix': "%", 'valueformat': '.3f'},
+        delta = {'relative': True, 'valueformat': '.3%', 'reference': df_patrimonio['evolucao_cum'][1]},
+        domain = {'row': 1, 'column': 0}
+    ))
+
+    fig.update_layout(MAIN_CONFIG, grid={'rows': 2, 'columns': 1, 'pattern': "independent", 'ygap': 0})
+    return fig
+
+
+# callback para atulizar o dropdown
 @app.callback(
     Output('dropdown_card1', 'value'),
     Output('dropdown_card1', 'options'),
@@ -351,6 +402,7 @@ def atualizar_dropdown(book):
     
     return [unique[0], [{'label': x, 'value': x} for x in unique]]
 
+# asimov news first initialization
 @app.callback(
     Output('asimov_news', 'children'),
     Input('ibov_switch', 'value'),         # input aleatório - necessário no Dash
