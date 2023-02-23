@@ -118,8 +118,8 @@ def test1(data):
 )
 def func_modal(n1, n2, data, event, ativo, open, radio, preco, periodo, vol):
     trigg_id = callback_context.triggered[0]['prop_id'].split('.')[0]
-    print('TRIGG_ID', trigg_id)
-    print('OPT4', callback_context.triggered[0])    # dict['value'] == None -> ignorar
+    # print('TRIGG_ID', trigg_id)
+    # print('OPT4', callback_context.triggered[0])    # dict['value'] == None -> ignorar
                                                     # dict['value'] != None -> clicado
 
     return_default = ['', '' , '']
@@ -138,17 +138,14 @@ def func_modal(n1, n2, data, event, ativo, open, radio, preco, periodo, vol):
     # Casos de trigg
     # 0. Trigg automático
     if trigg_id == '':
-        print('Caiu 0')
         return [open, open, *return_default, '', data, lista_de_cards]
 
     # 1. Botão de abrir modal
     if trigg_id == 'add_button':
-        print('Caiu 1')
         return [not open, open, *return_default, '', data, lista_de_cards]
     
     # 2. Salvando ativo
     elif trigg_id == 'submit_cadastro':  # Corrigir caso de erro - None
-        print('Caiu 2')
         if None in [ativo, preco, vol] and open:
             return [open, not open, *return_fail_inputs, '', data, lista_de_cards]
         else:
@@ -171,22 +168,15 @@ def func_modal(n1, n2, data, event, ativo, open, radio, preco, periodo, vol):
                 return [not open, open, *retorno, '', data, lista_de_cards]
             else:   
                 return [not open, open, *return_fail_ticker, '', data, lista_de_cards]
-    # if n1 or n2: return [not open, open, *retorno, '', data]
 
-    # else: return [open, open, *retorno, '', data]
     # 3. Caso de delete de card
-    
     if 'delete_event' in trigg_id:
         trigg_dict = callback_context.triggered[0]
-        # pdb.set_trace()
-        # trigg_id = json.loads(trigg_id)
 
         if trigg_dict['value'] == None:
-            print('caiu value')
             return [open, open, *return_default, '', data, lista_de_cards]
 
         else:
-            print('caiu else')
             trigg_id = json.loads(trigg_id)
             df.drop([trigg_id['index']], inplace=True)
             data = df.to_dict()
@@ -196,130 +186,3 @@ def func_modal(n1, n2, data, event, ativo, open, radio, preco, periodo, vol):
             return [open, open, *return_default, '', data, lista_de_cards]
 
     return [open, open, *return_default, '', data, lista_de_cards]
-    # df = pd.DataFrame(data)
-
-    # lista_de_dicts = []
-
-    # # print('\n\n',event)
-    # print('\n\n',trigg_id)
-    # for row in df.index:
-    #     infos = df.loc[row].to_dict()
-    #     #altera nome da classe do card se for compra ou venda
-    #     if infos['tipo'] == 'Compra':
-    #         infos['class_card'] = 'card_compra'
-    #     else:
-    #         infos['class_card'] = 'card_venda'
-    #     infos['id'] = row
-    #     lista_de_dicts.append(infos)
-    #     # print(infos)
-    
-    # # pdb.set_trace()
-
-    # lista_de_cards = []
-    # for dicio in lista_de_dicts:
-    #     card = generate_card(dicio)
-    #     lista_de_cards.append(card)
-
-    # return [not open, open, *retorno, '', df_data, lista_de_cards]
-
-
-
-
-
-# @app.callback(
-#     Output('modal', 'is_open'),
-#     Output("positioned_toast", "is_open"),
-#     Output('positioned_toast', 'header'),
-#     Output('positioned_toast', 'children'),
-#     Output('positioned_toast', 'icon'),
-#     Output('imagem_ativo', 'src'),
-#     Output('book_data_store', 'data'),
-#     Output ('layout_wallet', 'children'),
-
-#     Input('add_button', 'n_clicks'),
-#     Input('submit_cadastro', 'n_clicks'),
-#     Input('book_data_store', 'data'),
-#     Input({'type': 'delete_event', 'index': ALL}, 'n_clicks'),
-
-#     State('nome_ativo', 'value'),
-#     State('modal', 'is_open'),
-#     State('compra_venda_radio', 'value'),
-#     State('preco_ativo', 'value'),
-#     State('data_ativo', 'date'),
-#     State('quantidade_ativo', 'value'),
-#     State('book_data_store', 'data'), prevent_initial_call=True
-# )
-
-# def update_wallet(n1, n2, data, event, ativo, open, radio, preco, periodo, vol, df_data):
-#     return ['success',[]]
-#     return [True, False, 'a', 'a', 'success', '', {}, []]
-#     df = pd.DataFrame(data)
-
-#     lista_de_dicts = []
-#     triggered_id = [p['prop_id'] for p in callback_context.triggered][0]
-
-#     if type(triggered_id) == dict: 
-#         if triggered_id['index'] == row:
-#             df.drop([triggered_id['index']], axis=0, inplace=True)
-            
-#     # print('\n\n',event)
-#     print('\n\n',triggered_id)
-#     for row in df.index:
-#         infos = df.loc[row].to_dict()
-#         #altera nome da classe do card se for compra ou venda
-#         if infos['tipo'] == 'Compra':
-#             infos['class_card'] = 'card_compra'
-#         else:
-#             infos['class_card'] = 'card_venda'
-#         infos['id'] = row
-#         lista_de_dicts.append(infos)
-#         # print(infos)
-    
-#     # pdb.set_trace()
-
-#     lista_de_cards = []
-#     for dicio in lista_de_dicts:
-#         card = generate_card(dicio)
-#         lista_de_cards.append(card)
-#     return lista_de_cards
-
-
-
-
-
-# @app.callback(
-#     Output ('layout_wallet', 'children'),
-#     Input  ('book_data_store', 'data'),
-#     Input({'type': 'delete_event', 'index': ALL}, 'n_clicks'),
-# )
-
-# def update_wallet(data, event):
-#     df = pd.DataFrame(data)
-
-#     lista_de_dicts = []
-#     triggered_id = [p['prop_id'] for p in callback_context.triggered][0]
-
-#     if type(triggered_id) == dict: 
-#         if triggered_id['index'] == row:
-#             df.drop([triggered_id['index']], axis=0, inplace=True)
-            
-#     # print('\n\n',event)
-#     print('\n\n',triggered_id)
-#     for row in df.index:
-#         infos = df.loc[row].to_dict()
-#         #altera nome da classe do card se for compra ou venda
-#         if infos['tipo'] == 'Compra':
-#             infos['class_card'] = 'card_compra'
-#         else:
-#             infos['class_card'] = 'card_venda'
-#         infos['id'] = row
-#         lista_de_dicts.append(infos)
-#         # print(infos)
-    
-#     # pdb.set_trace()
-
-#     lista_de_cards = []
-#     for dicio in lista_de_dicts:
-#         card = generate_card(dicio)
-#         lista_de_cards.append(card)
-#     return lista_de_cards

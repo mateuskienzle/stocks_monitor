@@ -357,7 +357,7 @@ def atualizar_dropdown(book):
     State('asimov_news', 'children')
 )
 def asimov_news_first_initialization(switch, news):
-    if news != None:
+    if news[0]['props']['children'] != None:
         return no_update
     else:
         return generate_list_of_news_cards(list(noticias.keys()))
