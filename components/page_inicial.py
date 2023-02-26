@@ -60,10 +60,6 @@ url = 'https://www.google.com/search?q={}+icon+logo&tbm=isch&ved=2ahUKEwj8283-zI
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")
 
-def formatar_grandes_numeros(num, ends=["", "K", "M", "B", "T"]):
-    # divides by 3 to separate into thousands (...000) Divide por 3 os separadores de milhar
-	return ends[int(floor(log10(num))/3)]
-
 def definir_evolucao_patrimonial(df_historical_data: pd.DataFrame, df_book_data: pd.DataFrame) -> pd.DataFrame:
     df_historical_data = df_historical_data.set_index('datetime')
     df_historical_data['date'] = df_historical_data.index.date
@@ -110,6 +106,7 @@ def definir_evolucao_patrimonial(df_historical_data: pd.DataFrame, df_book_data:
 def slice_df_timedeltas(df: pd.DataFrame, period_string: str) -> pd.DataFrame:
     if period_string == 'ytd':
         correct_timedelta = date.today().replace(month=1, day=1)
+        correct_timedelta = pd.Timestamp(correct_timedelta)
     else:
         correct_timedelta = date.today() - TIMEDELTAS[period_string]
     df = df[df.datetime > correct_timedelta].sort_values('datetime')
@@ -413,3 +410,64 @@ def asimov_news_first_initialization(switch, news):
         return no_update
     else:
         return generate_list_of_news_cards(list(noticias.keys()))
+    
+
+@app.callback(
+    Output('podium_graph', 'figure'),
+    Input('book_data_store', 'data'),
+    Input('period_input', 'value'),
+    State('historical_data_store', 'data')
+)
+
+def atualizar_podium_graph(book_data, period, historical_data):
+    df_book = pd.DataFrame(book_data)
+    df_hist = pd.DataFrame(historical_data)
+
+    df_book['datetime'] = pd.to_datetime(df_book['date'], format='%Y-%m-%d %H:%M:%S')
+
+
+    df2 = df_book.groupby(by=['ativo', 'tipo'])['vol'].sum()
+
+
+
+    diferenca_ativos = {}
+    for ativo, new_df in df2.groupby(level=0):
+        compra, venda = 0, 0
+        try:
+            compra = new_df.xs((ativo, 'Compra'))
+        except: pass
+        try:
+            venda = new_df.xs((ativo, 'Venda'))
+        except: pass
+        diferenca_ativos[ativo] = compra - venda
+
+    ativos_existentes = dict((k, v) for k, v in diferenca_ativos.items() if v >= 0)
+
+    if period == 'ytd':
+        correct_timedelta = date.today().replace(month=1, day=1)
+        correct_timedelta = pd.Timestamp(correct_timedelta)
+    else:
+        correct_timedelta = date.today() - TIMEDELTAS[period]
+
+    dict_desempenhos = {}
+    for key, value in ativos_existentes.items():
+        df_auxiliar = (df_hist[df_hist.symbol.str.contains(key)])
+        df_auxiliar['datetime'] = pd.to_datetime(df_auxiliar['datetime'], format='%Y-%m-%d %H:%M:%S')
+        df_periodo = df_auxiliar[df_auxiliar['datetime'] > correct_timedelta]
+        desempenho_ativo = df_periodo.iloc[-1]['close']/df_periodo.iloc[0]['close']
+        dict_desempenhos[key] = desempenho_ativo
+
+
+    ativos = sorted(dict_desempenhos, key=dict_desempenhos.get, reverse=True)[:3]
+    podium_dict = {}
+    for posicao in range(3):
+        dict_desempenhos[ativos[posicao]] = (dict_desempenhos[ativos[posicao]]*100) - 100
+        podium_dict[ativos[posicao]] = dict_desempenhos[ativos[posicao]]
+
+
+
+    df_podio = pd.DataFrame(list(podium_dict.items()), columns=['Ativos', '%'])
+    fig = px.bar(df_podio, x="Ativos", y="%")
+    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+
+    return fig
