@@ -28,7 +28,7 @@ TITLES = {x: y for x, y in zip(PERIOD_OPTIONS, delta_titles)}
 
 HEIGHT={'height': '100%'}
 MAIN_CONFIG = {
-    "hovermode": "x unified",
+    # "hovermode": "x unified",
     "legend": {"yanchor":"top", 
                 "y":0.9, 
                 "xanchor":"left",
@@ -161,10 +161,19 @@ def generate_list_of_news_cards(lista_tags_ativos):
     for t in threads:
         t.join()
     
-    for i in range(len(lista_tags_ativos)):
-        for j in range(len(noticias[lista_tags_ativos[i]])):
-            noticias[lista_tags_ativos[i]][j]['tickerLogo'] = logos[i]
-            card_news = generate_card_news(noticias[lista_tags_ativos[i]][j])
+    # print(lista_tags_ativos)
+
+    # for i in range(len(lista_tags_ativos)):
+    #     for j in range(len(noticias[lista_tags_ativos[i]])):
+    #         noticias[lista_tags_ativos[i]][j]['tickerLogo'] = logos[i]
+    #         card_news = generate_card_news(noticias[lista_tags_ativos[i]][j])
+    #         lista_de_cards_noticias.append(card_news)
+    # print(noticias)
+
+    for i, ativo in enumerate(lista_tags_ativos):
+        for j, noticia in enumerate(noticias[ativo]):
+            noticias[ativo][j]['tickerLogo'] = logos[i]
+            card_news = generate_card_news(noticias[ativo][j])
             lista_de_cards_noticias.append(card_news)
 
     random.shuffle(lista_de_cards_noticias,random.random)
@@ -241,7 +250,16 @@ layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    dcc.Graph(id='podium_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT)
+                        dbc.Row([
+                            dbc.Col([
+                                html.Legend('Ranking de desempenhos')
+                            ])  
+                        ]),
+                        dbc.Row([
+                            dbc.Col([
+                                dcc.Graph(id='podium_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT)
+                            ])
+                        ])    
                 ])
             ], style=HEIGHT)
         ], xs=6, md=4),
@@ -411,7 +429,7 @@ def asimov_news_first_initialization(switch, news):
     else:
         return generate_list_of_news_cards(list(noticias.keys()))
     
-
+#callback podium graph
 @app.callback(
     Output('podium_graph', 'figure'),
     Input('book_data_store', 'data'),
@@ -466,8 +484,40 @@ def atualizar_podium_graph(book_data, period, historical_data):
 
 
 
-    df_podio = pd.DataFrame(list(podium_dict.items()), columns=['Ativos', '%'])
-    fig = px.bar(df_podio, x="Ativos", y="%")
-    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    df_podio = pd.DataFrame(list(podium_dict.items()), columns=['Ativos', ' '])
+    df_podio.loc[0:1] = [df_podio.loc[1], df_podio.loc[0]]
+    fig = px.bar(df_podio, x="Ativos", y=" ")
+
+    range_min = df_podio.loc[2][1].round() -5
+    range_max = df_podio.loc[1][1].round() +20
+
+    fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%', 'range' : [range_min, range_max]})
+
+    fig.add_layout_image(
+        dict(
+            source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/gold_medal.png",
+            x=0.55,
+            y=0.85,
+        ))
+    fig.add_layout_image(dict(
+            source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/silver_medal.png",
+            x=0.20,
+            y=0.85,
+            )
+    )
+    fig.add_layout_image(dict(
+            source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/bronze_medal.png",
+            x=0.88,
+            y=0.85,
+            )
+    )
+    fig.update_layout_images(dict(
+            xref="paper",
+            yref="paper",
+            sizex=0.15,
+            sizey=0.15,
+            xanchor="right",
+            yanchor="bottom"
+    ))
 
     return fig
