@@ -134,9 +134,9 @@ def generate_card(info_do_ativo):
     return new_card
 
 app.layout = dbc.Container(children=[
-    dcc.Store(id='book_data_store', data=df_book, storage_type='session'),
-    dcc.Store(id='historical_data_store', data=df_historical_data, storage_type='session'),
-    dcc.Store(id='layout_data', data=[], storage_type='session'),
+    dcc.Store(id='book_data_store', data=df_book, storage_type='memory'),
+    dcc.Store(id='historical_data_store', data=df_historical_data, storage_type='memory'),
+    dcc.Store(id='layout_data', data=[], storage_type='memory'),
     dcc.Interval(id='interval_update', interval=1000*600),
     dbc.Row([
         dbc.Col([
@@ -152,12 +152,12 @@ app.layout = dbc.Container(children=[
                     toast
                 ]),
             ], style={'height' : '100%'}),
-            dbc.Row([
-                dbc.Col([
-                    html.P("CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%"),
-                    html.Div(id="div_retorno", style={'display':'none'})
-                ], style={"background-color" : 'black', 'color' : 'white', 'font-size' : '1.5em', 'overflow': 'hidden', 'position' : 'fixed', 'left' : '0', 'bottom' : '0', 'height': '1.5em'} )
-            ]),
+            # dbc.Row([
+            #     dbc.Col([
+            #         html.P("CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%, CDI: 1%, CDB: 2%, IBOV: 5%"),
+            #         html.Div(id="div_retorno", style={'display':'none'})
+            #     ], style={"background-color" : 'black', 'color' : 'white', 'font-size' : '1.5em', 'overflow': 'hidden', 'position' : 'fixed', 'left' : '0', 'bottom' : '0', 'height': '1.5em'} )
+            # ]),
             
         ])
      ])
@@ -202,7 +202,7 @@ def atualizar_databases(n, book_data, historical_data):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port=8051)  
+    app.run_server(debug=True, port=8050)  
 
 
 

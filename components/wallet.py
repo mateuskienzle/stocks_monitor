@@ -12,6 +12,8 @@ from components.page_inicial import financer
 
 from app import * 
 
+HEIGHT={'height': '100%'}
+
 def generate_card(info_do_ativo):
     new_card =  dbc.Row([
             dbc.Col([
@@ -84,7 +86,23 @@ def generate_list_of_cards(df):
         lista_de_cards.append(card)
     return lista_de_cards
 
-layout = dbc.Container(children=[], id='layout_wallet', fluid=True),
+layout = dbc.Container([
+
+    dbc.Row([
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.Legend("Card Resumo")
+                ])
+            ], style=HEIGHT)
+        ], md=4),
+        dbc.Col([
+            
+        ], md=8, id='layout_wallet', style={"height": "100%", "maxHeight": "70rem", "overflow-y": "auto"})
+    ], className='g-2 my-auto')
+
+    
+    ],fluid=True),
 
 
 @app.callback(

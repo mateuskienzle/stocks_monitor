@@ -11,12 +11,6 @@ card_icon = {
 
 icon_bar = dbc.Row([
     dbc.Col([
-        dbc.Button(id='add_button',
-            children=[html.Div(className="fa fa-plus-circle header-icon", style=card_icon)
-            ], style={'border-color': 'transparent',  'background-color': 'transparent'}
-        ),
-    ], xs=4, width={"order": "last"}),
-    dbc.Col([
         dbc.Button(id='home-button', href='/',
             children=[html.Div(className="fa fa-home header-icon", style=card_icon)
             ], style={'border-color': 'transparent', 'background-color': 'transparent'}
@@ -27,7 +21,13 @@ icon_bar = dbc.Row([
             children=[html.Div(className="fa fa-folder-open-o header-icon", style=card_icon)
             ], style={'border-color': 'transparent', 'background-color': 'transparent'}
         ),
-    ], xs=4) 
+    ], xs=4), 
+    dbc.Col([
+        dbc.Button(id='add_button',
+            children=[html.Div(className="fa fa-plus-circle header-icon", style=card_icon)
+            ], style={'border-color': 'transparent',  'background-color': 'transparent'}
+        ),
+    ], xs=4, width={"order": "last"})
 ], className="g-0 ms-auto flex-nowrap mt-3 mt-md-0", align="center")
 
 
@@ -48,9 +48,10 @@ layout = dbc.Navbar(
             is_open=False,
             navbar=True),
     ]),
-    color="dark",
+    color="#264249",#264249
     dark=True,
 )
+
 
 # add callback for toggling the collapse on small screens
 @app.callback(

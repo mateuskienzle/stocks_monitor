@@ -9,6 +9,7 @@ from datetime import datetime, date
 import numpy as np
 import random
 from math import log10, floor
+import tinycss2
 
 import threading
 
@@ -28,7 +29,7 @@ TITLES = {x: y for x, y in zip(PERIOD_OPTIONS, delta_titles)}
 
 HEIGHT={'height': '100%'}
 MAIN_CONFIG = {
-    # "hovermode": "x unified",
+    "hovermode": "x unified",
     "legend": {"yanchor":"top", 
                 "y":0.9, 
                 "xanchor":"left",
@@ -38,6 +39,17 @@ MAIN_CONFIG = {
                 "bgcolor": "rgba(0,0,0,0.5)"},
     "margin": {"l":0, "r":0, "t":10, "b":0}
 }
+
+# with open('assets/style.css') as f:
+#     css_file = f.read()
+
+# cor_textoTerciario = css_file[-10:-3]
+# font_textoTerciario = float(css_file[-29:-26]) + 18.5
+
+INDICATOR_FONT = 35
+AXIS_FONT_SIZE = 20
+AXIS_COLOR = '#7d9696'
+
 
 df_ibov = pd.read_csv('tabela_ibov.csv')
 
@@ -128,22 +140,27 @@ def generate_card_news(noticia_ativo):
                                         dbc.Col([
                                             dbc.Row([
                                                 dbc.Col([
-                                                    html.Legend(str(noticia_ativo['title']), style={"color": 'white'})
+                                                    html.Legend(str(noticia_ativo['title']), className='textoTerciario')
                                                 ]),
                                             ]),
                                             dbc.Row([
                                                 dbc.Col([
-                                                    html.Legend("Fonte: " + str(noticia_ativo['publisher']), style={"color": 'gray',  'marginTop' : '1rem'})
+                                                    html.Legend("Fonte: " + str(noticia_ativo['publisher']), style={'marginTop' : '1rem'}, className='textoTerciario')
                                                 ]),
                                             ]),
                                         ], md=10, xs=6),
                                         dbc.Col([
-                                            html.Img(src=noticia_ativo['tickerLogo'], style={'width' : '50%', 'border-radius' : '15%'})
-                                        ], md=2, xs=12, style={'text-align' : 'right'})
+                                            dbc.Card([
+                                                dbc.CardBody([
+                                                        html.Legend(noticia_ativo['tickerName'], className='textoTerciario')
+                                                ], style={'background-color' : '#002b36'})
+                                            ])
+                                            
+                                        ], md=2, xs=12, style={'text-align' : 'center'})
                                     ])
                                 ])
                             ], href=noticia_ativo['link'], target='_blank')
-                        ], style={'background-color' : '#000000'})
+                        ], style={'background-color' : 'primary'})
                     ],)
         ], className='g-2 my-auto')
     return new_card
@@ -151,38 +168,79 @@ def generate_card_news(noticia_ativo):
 def generate_list_of_news_cards(lista_tags_ativos):
     lista_tags_ativos = list(noticias.keys())
     lista_de_cards_noticias = []
-    logos = {}
+    # logos = {}
 
-    threads = []
-    for i, tags_ativos in enumerate(lista_tags_ativos):
-        threads.append(threading.Thread(target=pegar_logo, args=(tags_ativos, logos, i)))
-        threads[-1].start()
+    # threads = []
+    # for i, tags_ativos in enumerate(lista_tags_ativos):
+    #     threads.append(threading.Thread(target=pegar_logo, args=(tags_ativos, logos, i)))
+    #     threads[-1].start()
 
-    for t in threads:
-        t.join()
-    
-    # print(lista_tags_ativos)
+    # for t in threads:
+    #     t.join()
 
-    # for i in range(len(lista_tags_ativos)):
-    #     for j in range(len(noticias[lista_tags_ativos[i]])):
-    #         noticias[lista_tags_ativos[i]][j]['tickerLogo'] = logos[i]
-    #         card_news = generate_card_news(noticias[lista_tags_ativos[i]][j])
-    #         lista_de_cards_noticias.append(card_news)
-    # print(noticias)
-
+    # lista_auxliar = []
     for i, ativo in enumerate(lista_tags_ativos):
         for j, noticia in enumerate(noticias[ativo]):
-            noticias[ativo][j]['tickerLogo'] = logos[i]
-            card_news = generate_card_news(noticias[ativo][j])
-            lista_de_cards_noticias.append(card_news)
+            # if noticias[ativo][j]['title'] not in lista_auxliar:
+            #     lista_auxliar.append(noticias[ativo][j]['title'])
+                noticias[ativo][j]['tickerName'] = ativo[:-3]
+                # print(noticias[ativo][j])
+                # print(noticias[ativo])
+                # print(ativo)
+                # import pdb
+                # pdb.set_trace()
+                card_news = generate_card_news(noticias[ativo][j])
+                lista_de_cards_noticias.append(card_news)
 
     random.shuffle(lista_de_cards_noticias,random.random)
     return lista_de_cards_noticias
+
+try:
+    df_book_data = pd.read_csv('book_data.csv', index_col=0)
+except:
+    columns = ['date', 'preco', 'tipo', 'ativo', 'exchange', 'vol', 'logo_url', 'valor_total']
+    df_book_data = pd.DataFrame(columns=columns)
+
+df_compra_e_venda = df_book_data.groupby('tipo').sum()
+
 
 
 # =========  Layout  =========== #
 layout = dbc.Container([
     # Linha 1
+    dbc.Row([
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    dbc.Row([
+                        dbc.Col([
+                            html.Legend("Total da carteira", className='textoPrincipal'),
+                            html.Legend("R$" + str(df_book_data['valor_total'].sum() - df_compra_e_venda['valor_total']['Venda']), className='textoSecundario')
+                        ], style={'text-align' : 'center'})
+                    ])
+                ])
+            ])
+        ], md=3),
+
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    dbc.Row([
+                        dbc.Col([
+                            html.Legend("CDI", className='textoPrincipal'),
+                            html.Legend("13.65%", className='textoSecundario')
+                        ], style={'text-align' : 'center'})
+                    ])
+                ])
+            ]),
+        ], md=2),
+
+        dbc.Col([
+            
+        ], md=7,  id= 'cards_valores_ativos')
+    ], className='g-2 my-auto'),
+
+    # Linha 2
     dbc.Row([
         # Card 1
         dbc.Col([
@@ -190,22 +248,23 @@ layout = dbc.Container([
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col([
-                            dcc.Dropdown(id='dropdown_card1', className='dbc', value=[], multi=True, options=[]),
+                            dcc.Dropdown(id='dropdown_card1', className='dbc textoTerciario', value=[], multi=True, options=[]),
                         ], sm=12, md=3),
                         dbc.Col([
                             dbc.RadioItems(
                                 options=[{'label': x, 'value': x} for x in PERIOD_OPTIONS],
                                 value='1y',
                                 id="period_input",
-                                inline=True
+                                inline=True,
+                                className='textoTerciario'
                             ),
                         ], sm=12, md=7),
                         dbc.Col([
                             html.Span([
-                                    dbc.Label(className='fa fa-percent'),
+                                    dbc.Label(className='fa fa-percent '),
                                     dbc.Switch(id='profit_switch', value=True, className='d-inline-block ms-1'),
                                     dbc.Label(className='fa fa-money')
-                            ]),
+                            ], className='textoTerciario'),
                         ], sm=12, md=2)
                     ]),
                     dbc.Row([
@@ -223,10 +282,10 @@ layout = dbc.Container([
                 dbc.CardBody([
                     dbc.Row([
                         dbc.Col([
-                            html.Legend('Gestão Setorial IBOV'),
+                            html.Legend('Gestão Setorial IBOV', className='textoSecundario'),
                             dbc.Switch(id='ibov_switch', value=True, label="Comparativo"),
                         ])
-                    ]),
+                    ], className='textoTerciario'),
                     dbc.Row([
                         dbc.Col([
                             dcc.Graph(id='radar_graph', config={"displayModeBar": False, "showTips": False})
@@ -245,14 +304,14 @@ layout = dbc.Container([
                     dcc.Graph(id='indicator_graph', config={"displayModeBar": False, "showTips": False},  style=HEIGHT),
                 ])
             ], style=HEIGHT)
-        ], xs=6, md=2),
+        ], xs=6, md=3),
         # Card 4 -podium graph
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
                         dbc.Row([
                             dbc.Col([
-                                html.Legend('Ranking de desempenhos')
+                                html.Legend('Ranking de desempenhos', className='textoSecundario')
                             ])  
                         ]),
                         dbc.Row([
@@ -262,13 +321,11 @@ layout = dbc.Container([
                         ])    
                 ])
             ], style=HEIGHT)
-        ], xs=6, md=4),
+        ], xs=6, md=5),
         # Card 5 - asimov news
         dbc.Col([
-            dbc.Card([
-                dbc.CardBody(id='cardbodytest')
-            ], id='asimov_news', style={"height": "100%", "maxHeight": "35rem", "overflow-y": "auto"})
-        ], xs=12, md=6)
+            
+        ], xs=12, md=4, id='asimov_news', style={"height": "100%", "maxHeight": "35rem", "overflow-y": "auto"})
     ], className='g-2 my-auto')
 ], fluid=True)
 
@@ -311,6 +368,9 @@ def func_card1(dropdown, period, profit_switch, book_info, historical_info):
             fig.add_trace(go.Scatter(x=df_aux.datetime, y=df_aux.close*100, mode='lines', name=ticker))
     
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%'})
+    fig.update_xaxes(tickfont=dict(family='Courier', size=AXIS_FONT_SIZE, color=AXIS_COLOR))
+    fig.update_yaxes(tickfont=dict(family='Courier', size=AXIS_FONT_SIZE, color=AXIS_COLOR))
+    
     return fig
 
 # Callback radar graph
@@ -351,7 +411,8 @@ def radar_graph(book_data, comparativo):
                                     hovertemplate ='<b>IBOV</b>'+'<br><b>Participação</b>: %{r:.2f}%'+ '<br><b>Setor</b>: %{theta}<br>'))
 
     fig.update_traces(line={'shape': 'spline'})
-    fig.update_layout(MAIN_CONFIG, showlegend=True)
+    fig.update_layout(MAIN_CONFIG, showlegend=True, polar=dict(angularaxis = dict(tickfont_size = AXIS_FONT_SIZE, color=AXIS_COLOR)))
+
 
     return fig
 
@@ -386,15 +447,15 @@ def indicator_graph_function(book_data, period, historical_data):
 
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        title = {"text": f"Evolução Patrimonial<br><span style='font-size:0.8em;color:gray'>Ambos relativos a: {period}</span>"},
+        title = {"text": f"<br><span style='font-size:{INDICATOR_FONT};'>Evolução Patrimonial<br>Ambos relativos a: {period}</span>"},
         value = df_patrimonio['soma'][-1],
         number = {'prefix': "R$", 'valueformat': '.2s'},
         delta = {'relative': True, 'valueformat': '.1%', 'reference': df_patrimonio['soma'][1]},
-        domain = {'row': 0, 'column': 0}
+        domain = {'row': 0, 'column': 0},
     ))
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        title = {"text": f"Percentual"},
+        title = {"text": f"<br><span style='font-size:{INDICATOR_FONT};'>Percentual</span>"},
         value = df_patrimonio['evolucao_cum'][-1],
         number = {'suffix': "%", 'valueformat': '.3f'},
         delta = {'relative': True, 'valueformat': '.3%', 'reference': df_patrimonio['evolucao_cum'][1]},
@@ -424,14 +485,22 @@ def atualizar_dropdown(book):
     State('asimov_news', 'children')
 )
 def asimov_news_first_initialization(switch, news):
-    if news[0]['props']['children'] != None:
+    if news != []:
         return no_update
+    # if news[0]['props']['children'] != None:
+    #     return no_update
     else:
-        return generate_list_of_news_cards(list(noticias.keys()))
+        titulo = dbc.Card([
+            dbc.CardBody([
+                html.Legend('Notícias ',className='textoSecundario')
+            ])
+        ])
+        return [titulo] + generate_list_of_news_cards(list(noticias.keys())) 
     
 #callback podium graph
 @app.callback(
     Output('podium_graph', 'figure'),
+    Output('cards_valores_ativos', 'children'),
     Input('book_data_store', 'data'),
     Input('period_input', 'value'),
     State('historical_data_store', 'data')
@@ -443,10 +512,7 @@ def atualizar_podium_graph(book_data, period, historical_data):
 
     df_book['datetime'] = pd.to_datetime(df_book['date'], format='%Y-%m-%d %H:%M:%S')
 
-
     df2 = df_book.groupby(by=['ativo', 'tipo'])['vol'].sum()
-
-
 
     diferenca_ativos = {}
     for ativo, new_df in df2.groupby(level=0):
@@ -468,13 +534,61 @@ def atualizar_podium_graph(book_data, period, historical_data):
         correct_timedelta = date.today() - TIMEDELTAS[period]
 
     dict_desempenhos = {}
+    dict_valores = {}
     for key, value in ativos_existentes.items():
+        #atualiza valores para o podium graph
         df_auxiliar = (df_hist[df_hist.symbol.str.contains(key)])
         df_auxiliar['datetime'] = pd.to_datetime(df_auxiliar['datetime'], format='%Y-%m-%d %H:%M:%S')
         df_periodo = df_auxiliar[df_auxiliar['datetime'] > correct_timedelta]
-        desempenho_ativo = df_periodo.iloc[-1]['close']/df_periodo.iloc[0]['close']
+        desempenho_ativo = df_periodo['close'].iloc[-1]/df_periodo['close'].iloc[0]
         dict_desempenhos[key] = desempenho_ativo
 
+        #atualiza cards dos valores dos ativos logo abixo do header
+        valor_atual = df_periodo['close'].iloc[-1]
+        diferenca_periodo= valor_atual/df_periodo['close'].iloc[0]
+        dict_valores[key] = valor_atual, diferenca_periodo
+        dfativos= pd.DataFrame(dict_valores).T.rename_axis('ticker').add_prefix('Value').reset_index()
+        dfativos['Value1']= dfativos['Value1']*100 - 100
+
+    lista_valores_ativos = []
+    seta_crescendo = ['fa fa-arrow-up', 'textoTerciarioPorcentagemUp']
+    seta_caindo = ['fa fa-arrow-down', 'textoTerciarioPorcentagemDown']
+    for ativo in range(len(dfativos)):
+        tag_ativo = dfativos.iloc[ativo][0]
+        valor_ativo = dfativos.iloc[ativo][1]
+        variacao_ativo = dfativos.iloc[ativo][2]
+        if variacao_ativo < 0:
+            lista_valores_ativos.append([tag_ativo, valor_ativo, variacao_ativo, seta_caindo[0], seta_caindo[1]])
+        else: 
+            lista_valores_ativos.append([tag_ativo, valor_ativo, variacao_ativo, seta_crescendo[0], seta_crescendo[1]])
+
+    lista_colunas = []
+    if len(lista_valores_ativos) <= 5:
+        for i in range(len(lista_valores_ativos)):
+            col = dbc.Col([
+                        html.Legend(lista_valores_ativos[i][0], className='textoPrincipal'),
+                        html.Legend(["R$", lista_valores_ativos[i][1], " ", html.I(className=lista_valores_ativos[i][3]), lista_valores_ativos[i][2].round(2), "%"], className=lista_valores_ativos[i][4])
+                ], style={'text-align' : 'center'})
+            
+            lista_colunas.append(col)
+    else: 
+        for i in range(5):
+            col = dbc.Col([
+                        html.Legend(lista_valores_ativos[i][0], className='textoPrincipal'),
+                        html.Legend(["R$", lista_valores_ativos[i][1], " ", html.I(className=lista_valores_ativos[i][3]), lista_valores_ativos[i][2].round(2), "%"], className=lista_valores_ativos[i][4])
+                ], style={'text-align' : 'center'})
+            
+            lista_colunas.append(col)
+
+
+
+    card_ativos= dbc.Card([
+                    dbc.CardBody([
+                        dbc.Row([
+                            *lista_colunas
+                        ])
+                    ],)
+                ]),
 
     ativos = sorted(dict_desempenhos, key=dict_desempenhos.get, reverse=True)[:3]
     podium_dict = {}
@@ -492,32 +606,35 @@ def atualizar_podium_graph(book_data, period, historical_data):
     range_max = df_podio.loc[1][1].round() +20
 
     fig.update_layout(MAIN_CONFIG, yaxis={'ticksuffix': '%', 'range' : [range_min, range_max]})
+    fig.update_xaxes(tickfont=dict(family='Courier', size=AXIS_FONT_SIZE, color=AXIS_COLOR))
+    fig.update_yaxes(tickfont=dict(family='Courier', size=AXIS_FONT_SIZE, color=AXIS_COLOR))
 
-    fig.add_layout_image(
-        dict(
-            source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/gold_medal.png",
-            x=0.55,
-            y=0.85,
-        ))
+
     fig.add_layout_image(dict(
             source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/silver_medal.png",
-            x=0.20,
+            x=0.195,
             y=0.85,
             )
     )
+    fig.add_layout_image(
+        dict(
+            source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/gold_medal.png",
+            x=0.525,
+            y=0.85,
+        ))
     fig.add_layout_image(dict(
             source="https://cdn0.iconfinder.com/data/icons/sport-balls/512/bronze_medal.png",
-            x=0.88,
+            x=0.86,
             y=0.85,
             )
     )
     fig.update_layout_images(dict(
             xref="paper",
             yref="paper",
-            sizex=0.15,
+            sizex=0.20,
             sizey=0.15,
             xanchor="right",
             yanchor="bottom"
     ))
 
-    return fig
+    return fig, card_ativos
